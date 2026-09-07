@@ -1,0 +1,2186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <title>TYLER'S INTEGRATED FARM INVESTMENT FUND</title>
+
+  <meta name="theme-color" content="#1e40af">
+  <meta name="mobile-web-app-capable" content="yes">
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TIF Fund">
+  <link rel="apple-touch-icon" href="tiflogo.png">
+
+  <link rel="manifest" id="manifestPlaceholder">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Chart.js para sa Graphical Status -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase SDKs (v8 compatibility) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+  <style>
+    :root {
+      --primary-color: #1e40af;
+      --primary-hover: #1e3a8a;
+      --accent-color: #3b82f6;
+      --bg-color: #0f172a;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --success-color: #16a34a;
+      --danger-color: #dc2626;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      --header-font: 'MS Sans Serif', 'Microsoft Sans Serif', 'Trebuchet MS', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      margin: 0;
+      padding: 15px 10px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    @media (min-width: 768px) {
+      body { padding: 30px 15px; }
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+
+    .app-header {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+      color: #ffffff;
+      padding: 20px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      text-align: center;
+    }
+
+    @media (min-width: 768px) {
+      .app-header {
+        flex-direction: row;
+        padding: 24px 32px;
+        text-align: left;
+      }
+    }
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    @media (min-width: 600px) {
+      .header-left {
+        flex-direction: row;
+        gap: 20px;
+      }
+    }
+
+    .header-logo {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #ffffff;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      background-color: #fff;
+    }
+
+    .header-content h1 {
+      margin: 0 0 6px 0;
+      font-family: var(--header-font);
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    @media (min-width: 768px) {
+      .header-content h1 { font-size: 1.6rem; }
+    }
+
+    .header-content p {
+      margin: 0;
+      color: #e0e7ff;
+      font-size: 0.85rem;
+    }
+
+    .content-body { padding: 16px; }
+
+    @media (min-width: 768px) {
+      .content-body { padding: 32px; }
+    }
+
+    .login-wrapper {
+      max-width: 480px;
+      margin: 10px auto;
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .login-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .login-tab-btn {
+      flex: 1;
+      padding: 12px 10px;
+      background: #e2e8f0;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .login-tab-btn.active {
+      background: var(--primary-color);
+      color: #fff;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-top: 0;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title i { color: var(--accent-color); }
+
+    .card-box {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .grid-7 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .grid-3-charts {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 600px) and (max-width: 989px) {
+      .grid-3-charts { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (min-width: 990px) {
+      .grid-3-charts { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (min-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr 1fr; gap: 16px; }
+      .grid-3 { grid-template-columns: 1.5fr 1fr 1fr auto; gap: 12px; }
+      .grid-7 { grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    }
+
+    .form-group { margin-bottom: 12px; }
+
+    label {
+      display: block;
+      font-weight: 500;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    input[type="number"], input[type="text"], input[type="password"], input[type="date"], textarea, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      outline: none;
+      background-color: #fff;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .inline-fee-input {
+      width: 60px !important;
+      padding: 4px !important;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background-color: var(--primary-color);
+      color: #ffffff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-height: 40px;
+      white-space: nowrap;
+      width: 100%;
+    }
+
+    @media (min-width: 600px) { .btn { width: auto; } }
+
+    .btn-block { width: 100%; }
+    .btn:hover { background-color: var(--primary-hover); }
+
+    .btn-logout { background-color: #dc2626; }
+    .btn-logout:hover { background-color: #b91c1c; }
+
+    .btn-print { background-color: #1e3a8a; color: #fff; }
+    .btn-word { background-color: #2b579a; color: #fff; }
+
+    .btn-outline-danger {
+      background: transparent;
+      color: var(--danger-color);
+      border: 1px solid #fecaca;
+      padding: 6px 8px;
+      height: auto;
+      min-height: 32px;
+      font-size: 0.75rem;
+    }
+
+    .btn-outline-danger:hover { background-color: #fef2f2; }
+
+    .btn-edit {
+      background: #0284c7;
+      color: #fff;
+      padding: 6px 10px;
+      height: auto;
+      min-height: 32px;
+      font-size: 0.75rem;
+      border-radius: 4px;
+    }
+
+    .btn-export { background-color: #0d9488; }
+    .btn-export:hover { background-color: #0f766e; }
+
+    .btn-import { background-color: #d97706; }
+    .btn-import:hover { background-color: #b45309; }
+
+    .action-bar {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: stretch;
+      margin-bottom: 20px;
+      gap: 12px;
+    }
+
+    @media (min-width: 600px) {
+      .action-bar {
+        flex-direction: row;
+        align-items: center;
+      }
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    @media (min-width: 480px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 900px) { .dashboard-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; } }
+
+    .dash-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      border-left: 4px solid var(--accent-color);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dash-card.green { border-left-color: var(--success-color); }
+    .dash-card.red { border-left-color: var(--danger-color); }
+    .dash-card.purple { border-left-color: #8b5cf6; }
+
+    .dash-card .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .dash-card .value {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+      max-height: 550px;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.825rem;
+      min-width: 900px;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background-color: #f8fafc;
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--border-color);
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      z-index: 10;
+    }
+
+    td {
+      padding: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .text-green { color: var(--success-color); font-weight: 600; }
+    .text-red { color: var(--danger-color); font-weight: 500; }
+    .text-bold { font-weight: 600; }
+    .small-subtext { display: block; font-size: 0.7rem; color: var(--text-muted); }
+
+    .chart-container-box {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 320px;
+      width: 100%;
+    }
+
+    .app-footer {
+      text-align: center;
+      padding: 16px;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* Floating Calculator */
+    .calc-toggle-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: #fff;
+      border: none;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      z-index: 999;
+    }
+
+    .floating-calculator {
+      position: fixed;
+      bottom: 80px;
+      right: 15px;
+      left: 15px;
+      max-width: 340px;
+      margin: 0 auto;
+      background: #0f172a;
+      border-radius: 16px;
+      z-index: 1000;
+      padding: 16px;
+      display: none;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    @media (min-width: 400px) {
+      .floating-calculator { left: auto; right: 20px; }
+    }
+
+    .floating-calculator.active { display: block; }
+
+    .calc-header {
+      display: flex;
+      justify-content: space-between;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      margin-bottom: 10px;
+    }
+
+    .calc-screen-container {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 12px;
+      text-align: right;
+    }
+
+    .calc-history {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: #34d399;
+      min-height: 18px;
+    }
+
+    .calc-display {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: #10b981;
+      text-align: right;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.8rem;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .calc-grid-5 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .c-btn {
+      padding: 14px 8px;
+      background: #1e293b;
+      color: #f8fafc;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.05rem;
+      cursor: pointer;
+    }
+
+    .c-btn.func { background: #334155; color: #38bdf8; }
+    .c-btn.op { background: #2563eb; color: #fff; }
+    .c-btn.clear { background: #ef4444; color: #fff; }
+    .c-btn.equals { background: #10b981; color: #fff; grid-column: span 2; }
+
+    .hidden { display: none !important; }
+
+    /* Auto-sync Indicator Badge */
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid #10b981;
+      color: #34d399;
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 12px;
+    }
+    .sync-pulse {
+      width: 8px;
+      height: 8px;
+      background-color: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.3; }
+      50% { opacity: 1; }
+      100% { opacity: 0.3; }
+    }
+
+    @media print {
+      body { background: #ffffff !important; color: #000000 !important; padding: 0 !important; }
+      .container { box-shadow: none !important; border: none !important; max-width: 100% !important; width: 100% !important; }
+      .calc-toggle-btn, .floating-calculator, .action-bar, .btn, #userInfoHeader, .login-wrapper, .sync-badge { display: none !important; }
+      .card-box { border: 1px solid #ccc !important; background: #ffffff !important; box-shadow: none !important; }
+      .table-responsive { max-height: none !important; overflow: visible !important; }
+      th, td { border: 1px solid #999 !important; }
+      input.inline-fee-input { border: none !important; background: transparent !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  
+  <div class="app-header">
+    <div class="header-left">
+      <img src="tiflogo.png" alt="Logo" class="header-logo" onerror="this.src='https://via.placeholder.com/80?text=TIF'">
+      <div class="header-content">
+        <h1>TYLER'S INTEGRATED FARM INVESTMENT FUND</h1>
+        <p>Members Portal & Interest Distribution <span class="sync-badge"><span class="sync-pulse"></span> Auto-Sync Live</span></p>
+      </div>
+    </div>
+    <div id="userInfoHeader" class="hidden">
+      <span id="loggedInUserLabel" style="margin-right: 15px; font-weight: 600; color: #fff; display: block; margin-bottom: 5px;"></span>
+      <button class="btn btn-logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+    </div>
+  </div>
+
+  <div class="content-body">
+
+    <!-- LOGIN SECTION -->
+    <div id="loginSection" class="login-wrapper">
+      <div class="login-tabs">
+        <button class="login-tab-btn active" id="tabMember" onclick="switchTab('member')">Member Login</button>
+        <button class="login-tab-btn" id="tabAdmin" onclick="switchTab('admin')">Admin Login</button>
+      </div>
+
+      <div id="memberLoginForm">
+        <div class="form-group">
+          <label for="memberUsername">Username:</label>
+          <input type="text" id="memberUsername" placeholder="Enter username (e.g., member001)" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="memberPassword">Password:</label>
+          <input type="password" id="memberPassword" placeholder="Enter password (e.g., pass001)" autocomplete="current-password">
+        </div>
+        <button class="btn btn-block" onclick="loginAsMember()"><i class="fa-solid fa-right-to-bracket"></i> Login to Member Portal</button>
+      </div>
+
+      <div id="adminLoginForm" class="hidden">
+        <div class="form-group">
+          <label for="adminPass">Admin Password:</label>
+          <input type="password" id="adminPass" placeholder="Enter admin password" autocomplete="current-password">
+        </div>
+        <button class="btn btn-block" onclick="loginAsAdmin()"><i class="fa-solid fa-key"></i> Login to Admin Panel</button>
+      </div>
+    </div>
+
+    <!-- MEMBER DASHBOARD -->
+    <div id="memberDashboard" class="hidden">
+      <div class="card-box" style="background: #eff6ff; border-color: #bfdbfe;">
+        <h2 class="section-title" style="color: #1e40af;"><i class="fa-solid fa-circle-user"></i> Welcome, <span id="memberNameDisplay"></span>!</h2>
+        <p style="margin: 0; color: #1e3a8a; font-size: 0.9rem;">Here is your complete personal profile and investment breakdown.</p>
+      </div>
+
+      <!-- MEMBER PROFILE SUMMARY -->
+      <div class="card-box">
+        <h3 class="section-title"><i class="fa-solid fa-address-card"></i> Member Profile Details</h3>
+        <div class="grid-2">
+          <p style="margin: 4px 0;"><strong>Birth Date:</strong> <span id="mBirthDate">-</span></p>
+          <p style="margin: 4px 0;"><strong>Age:</strong> <span id="mAge">-</span> years old</p>
+          <p style="margin: 4px 0;" class="grid-span-2"><strong>Address:</strong> <span id="mAddress">-</span></p>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dash-card">
+          <div class="label">Your Total Contribution</div>
+          <div class="value">₱<span id="mContribution">0.00</span></div>
+        </div>
+        <div class="dash-card purple">
+          <div class="label">Your Share (%)</div>
+          <div class="value"><span id="mShare">0.00</span>%</div>
+        </div>
+        <div class="dash-card green">
+          <div class="label">Net Interest Credited</div>
+          <div class="value">₱<span id="mNetInterest">0.00</span></div>
+        </div>
+        <div class="dash-card red">
+          <div class="label">Fee Deducted</div>
+          <div class="value">₱<span id="mFee">0.00</span></div>
+        </div>
+      </div>
+
+      <!-- GRAPHICAL REALTIME STATUS (MEMBER) -->
+      <div class="chart-container-box">
+        <h3 class="section-title"><i class="fa-solid fa-chart-line"></i> Graphical Realtime Contribution Status</h3>
+        <div class="grid-3-charts">
+          <div>
+            <h4 style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px;">Weekly, Monthly & Yearly Overview</h4>
+            <div class="chart-wrapper">
+              <canvas id="memberSummaryChart"></canvas>
+            </div>
+          </div>
+          <div>
+            <h4 style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px;">Your Personal Contribution History</h4>
+            <div class="chart-wrapper">
+              <canvas id="memberHistoryChart"></canvas>
+            </div>
+          </div>
+          <div>
+            <h4 style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px;">Top Member Share Contributions</h4>
+            <div class="chart-wrapper">
+              <canvas id="memberShareChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h3 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Contribution History</h3>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type / Note</th>
+                <th class="text-right">Amount (₱)</th>
+              </tr>
+            </thead>
+            <tbody id="memberHistoryTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h3 style="margin-top:0; font-size: 1.1rem;">Fund Breakdown Details</h3>
+        <p style="font-size: 0.9rem;"><strong>Total Pool Contribution:</strong> ₱<span id="mPoolContribution">0.00</span></p>
+        <p style="font-size: 0.9rem;"><strong>Total Interest Distributed:</strong> ₱<span id="mPoolInterest">0.00</span></p>
+        <p style="font-size: 0.9rem;"><strong>Gross Interest Earned:</strong> ₱<span id="mGrossInterest">0.00</span></p>
+        <hr>
+        <h2 style="color: var(--success-color); margin-bottom:0; font-size: 1.3rem;">New Net Balance: ₱<span id="mTotalBalance">0.00</span></h2>
+      </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="adminDashboard" class="hidden">
+      
+      <!-- GRAPHICAL REALTIME STATUS (ADMIN) -->
+      <div class="chart-container-box">
+        <h2 class="section-title"><i class="fa-solid fa-chart-area"></i> Graphical Realtime Contribution Status Dashboard</h2>
+        <div class="grid-2">
+          <div>
+            <h4 style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px;">Weekly, Monthly & Yearly Total Contributions</h4>
+            <div class="chart-wrapper">
+              <canvas id="adminSummaryChart"></canvas>
+            </div>
+          </div>
+          <div>
+            <h4 style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px;">Top Member Share Contributions</h4>
+            <div class="chart-wrapper">
+              <canvas id="adminMembersChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ANNOUNCEMENT SETTINGS -->
+      <div class="card-box" style="background: #f0fdf4; border-color: #bbf7d0;">
+        <h2 class="section-title" style="color: #166534;"><i class="fa-solid fa-bullhorn"></i> Member Popup Announcement Settings</h2>
+        <div class="form-group">
+          <label for="announcementText" style="color: #166534;">Announcement Message:</label>
+          <textarea id="announcementText" rows="2" placeholder="Write announcement message here..."></textarea>
+        </div>
+        <button class="btn" style="background-color: #16a34a;" onclick="saveAnnouncement()"><i class="fa-solid fa-floppy-disk"></i> Save Announcement</button>
+      </div>
+
+      <!-- 1. ADD NEW MEMBER FORM -->
+      <div class="card-box">
+        <h2 class="section-title"><i class="fa-solid fa-user-plus"></i> 1. Add New Member</h2>
+        <div class="grid-7">
+          <div class="form-group">
+            <label for="memberName">Full Name</label>
+            <input type="text" id="memberName" placeholder="e.g., Juan Dela Cruz">
+          </div>
+          <div class="form-group">
+            <label for="memberContribInput">Initial Contribution (₱)</label>
+            <input type="number" id="memberContribInput" placeholder="0.00" min="0" step="any">
+          </div>
+          <div class="form-group">
+            <label for="memberFee">Fee (%)</label>
+            <input type="number" id="memberFee" placeholder="0" min="0" max="100" value="0" step="any">
+          </div>
+          <div class="form-group">
+            <label for="memberBirthdate">Birth Date</label>
+            <input type="date" id="memberBirthdate">
+          </div>
+          <div class="form-group">
+            <label for="memberAddress">Address</label>
+            <input type="text" id="memberAddress" placeholder="e.g., Cebu City">
+          </div>
+          <div class="form-group">
+            <label for="newUsername">Username</label>
+            <input type="text" id="newUsername" placeholder="e.g., juan">
+          </div>
+          <div class="form-group">
+            <label for="newPassword">Password</label>
+            <input type="password" id="newPassword" placeholder="Default: password123">
+          </div>
+        </div>
+        <button class="btn" style="margin-top: 10px;" onclick="addMember()"><i class="fa-solid fa-floppy-disk"></i> Save New Member</button>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+
+        <!-- 2. TOP-UP CONTRIBUTION -->
+        <h2 class="section-title"><i class="fa-solid fa-hand-holding-dollar"></i> 2. Record Additional Contribution (Top-up)</h2>
+        <div class="grid-3">
+          <div class="form-group">
+            <label for="topupMemberSelect">Select Member</label>
+            <select id="topupMemberSelect"></select>
+          </div>
+          <div class="form-group">
+            <label for="topupAmount">Amount (₱)</label>
+            <input type="number" id="topupAmount" placeholder="0.00" min="0" step="any">
+          </div>
+          <div class="form-group">
+            <label for="topupDate">Date</label>
+            <input type="date" id="topupDate">
+          </div>
+          <button class="btn" onclick="addContributionTopUp()"><i class="fa-solid fa-floppy-disk"></i> Save Contribution</button>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+
+        <!-- 3. FUND SETTINGS -->
+        <h2 class="section-title"><i class="fa-solid fa-coins"></i> 3. Fund Settings</h2>
+        <div class="grid-2">
+          <div class="form-group">
+            <label for="overallInterest">Total Earned Interest (₱)</label>
+            <input type="number" id="overallInterest" placeholder="0.00" min="0" step="any" oninput="renderTable()">
+          </div>
+          <div class="form-group">
+            <label for="customTotalContribution">Total Pool Contribution (₱)</label>
+            <input type="number" id="customTotalContribution" placeholder="Auto-calculated" min="0" step="any" oninput="renderTable()">
+          </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+          <button class="btn" style="background-color: #1e40af;" onclick="btnSaveFundSettings()"><i class="fa-solid fa-floppy-disk"></i> Save Fund Settings</button>
+          <button class="btn btn-export" onclick="exportDataBackup()"><i class="fa-solid fa-download"></i> Save Data (Backup JSON)</button>
+          <button class="btn btn-import" onclick="triggerRestore()"><i class="fa-solid fa-upload"></i> Restore Data (Import JSON)</button>
+          <input type="file" id="restoreFileInput" accept=".json" style="display: none;" onchange="importDataBackup(event)">
+        </div>
+      </div>
+
+      <!-- DISTRIBUTION SUMMARY -->
+      <div class="action-bar">
+        <h2 class="section-title" style="margin: 0;"><i class="fa-solid fa-chart-pie"></i> Distribution Summary</h2>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-print" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+          <button class="btn btn-word" onclick="exportToWord()"><i class="fa-solid fa-file-word"></i> Word</button>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dash-card">
+          <div class="label">Total Pool Contribution</div>
+          <div class="value">₱<span id="totalContributionDisplay">0.00</span></div>
+        </div>
+        <div class="dash-card green">
+          <div class="label">Gross Distributed Interest</div>
+          <div class="value">₱<span id="totalInterestDisplay">0.00</span></div>
+        </div>
+        <div class="dash-card red">
+          <div class="label">Total Processing Fees</div>
+          <div class="value">₱<span id="totalFeesDisplay">0.00</span></div>
+        </div>
+        <div class="dash-card purple">
+          <div class="label">Net Combined Fund</div>
+          <div class="value">₱<span id="totalFundDisplay">0.00</span></div>
+        </div>
+      </div>
+
+      <!-- SEARCH FILTER -->
+      <div class="card-box" style="padding: 10px 16px; margin-bottom: 12px;">
+        <input type="text" id="tableSearchInput" placeholder="🔍 Search member name, username, or address..." onkeyup="filterTables()">
+      </div>
+
+      <!-- REPORT TABLE -->
+      <div class="table-responsive">
+        <table id="reportTable">
+          <thead>
+            <tr>
+              <th>Member Profile</th>
+              <th>Address / Age</th>
+              <th class="text-right">Contribution</th>
+              <th class="text-center">Share (%)</th>
+              <th class="text-center">Fee Deduct (%)</th>
+              <th class="text-right">Net Credited Interest</th>
+              <th class="text-right">New Net Balance</th>
+              <th class="text-center" style="width: 110px;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="memberTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- CREDENTIALS MANAGEMENT -->
+      <div class="card-box" style="margin-top: 20px;">
+        <h2 class="section-title"><i class="fa-solid fa-user-gear"></i> 4. Manage Credentials & Profiles</h2>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Member Name</th>
+                <th>Birthdate & Age</th>
+                <th>Address</th>
+                <th>Username</th>
+                <th>Password</th>
+                <th class="text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="credentialsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECURITY SETTINGS -->
+      <div class="card-box" style="background: #fffbe3; border-color: #fef08a; margin-top: 20px;">
+        <h2 class="section-title" style="color: #854d0e;"><i class="fa-solid fa-user-shield"></i> Admin Security Settings</h2>
+        <div class="grid-2">
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="newAdminPass" style="color: #854d0e;">Change Admin Password:</label>
+            <input type="password" id="newAdminPass" placeholder="Enter new password">
+          </div>
+          <div>
+            <button class="btn" style="background-color: #d97706;" onclick="changeAdminPassword()"><i class="fa-solid fa-key"></i> Update Password</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="app-footer">
+    App developed by: DanDarz &copy;2026
+  </div>
+</div>
+
+<!-- CALCULATOR MODAL -->
+<button class="calc-toggle-btn" onclick="toggleCalculator()" title="Calculator">
+  <i class="fa-solid fa-calculator"></i>
+</button>
+
+<div class="floating-calculator" id="floatingCalc">
+  <div class="calc-header">
+    <span><i class="fa-solid fa-calculator"></i> CALCULATOR</span>
+    <button style="background:none; border:none; color:#fff; cursor:pointer;" onclick="toggleCalculator()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="calc-screen-container">
+    <div class="calc-history" id="calcHistory"></div>
+    <input type="text" class="calc-display" id="calcDisplay" value="0" readonly>
+  </div>
+  <div class="calc-grid-5">
+    <button class="c-btn func" onclick="calcFunc('sqrt')">&radic;x</button>
+    <button class="c-btn func" onclick="calcFunc('sqr')">x&sup2;</button>
+    <button class="c-btn func" onclick="appendCalc('(')">(</button>
+    <button class="c-btn func" onclick="appendCalc(')')">)</button>
+    <button class="c-btn clear" onclick="clearCalc()">C</button>
+    <button class="c-btn func" onclick="calcFunc('pm')">&plusmn;</button>
+    <button class="c-btn func" onclick="appendCalc('%')">%</button>
+    <button class="c-btn op" onclick="appendCalc('/')">&divide;</button>
+    <button class="c-btn" onclick="appendCalc('7')">7</button>
+    <button class="c-btn" onclick="appendCalc('8')">8</button>
+    <button class="c-btn" onclick="appendCalc('9')">9</button>
+    <button class="c-btn op" onclick="appendCalc('*')">&times;</button>
+    <button class="c-btn" onclick="appendCalc('4')">4</button>
+    <button class="c-btn" onclick="appendCalc('5')">5</button>
+    <button class="c-btn" onclick="appendCalc('6')">6</button>
+    <button class="c-btn op" onclick="appendCalc('-')">-</button>
+    <button class="c-btn" onclick="appendCalc('1')">1</button>
+    <button class="c-btn" onclick="appendCalc('2')">2</button>
+    <button class="c-btn" onclick="appendCalc('3')">3</button>
+    <button class="c-btn op" onclick="appendCalc('+')">+</button>
+    <button class="c-btn" onclick="appendCalc('0')">0</button>
+    <button class="c-btn" onclick="appendCalc('.')">.</button>
+    <button class="c-btn equals" onclick="calculateCalc()">=</button>
+  </div>
+</div>
+
+<script>
+  // DYNAMIC MANIFEST FOR PWA
+  const dynamicManifest = {
+    "short_name": "TIF Fund",
+    "name": "Tyler's Integrated Farm Investment Fund",
+    "start_url": ".",
+    "background_color": "#0f172a",
+    "theme_color": "#1e40af",
+    "display": "standalone",
+    "icons": [
+      { "src": "tiflogo.png", "type": "image/png", "sizes": "192x192" },
+      { "src": "tiflogo.png", "type": "image/png", "sizes": "512x512" }
+    ]
+  };
+  const stringManifest = JSON.stringify(dynamicManifest);
+  const blobManifest = new Blob([stringManifest], {type: 'application/json'});
+  const manifestURL = URL.createObjectURL(blobManifest);
+  document.getElementById('manifestPlaceholder').setAttribute('href', manifestURL);
+
+  // FIREBASE CONFIGURATION
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMfUFvlHaUVV2keLYcNz8U1xVAx-i6B4c",
+    authDomain: "tif-membersdata.firebaseapp.com",
+    projectId: "tif-membersdata",
+    storageBucket: "tif-membersdata.firebasestorage.app",
+    messagingSenderId: "97797558581",
+    appId: "1:97797558581:web:6ab16c6ff487bbb9c17c7c",
+    measurementId: "G-YFLWJL89D7"
+  };
+
+  let db = null;
+  let auth = null;
+  let firebaseEnabled = false;
+
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    auth = firebase.auth();
+    firebaseEnabled = true;
+  } catch (err) {
+    console.warn("Firebase initialized in fallback mode:", err.message);
+  }
+
+  // CHART INSTANCES
+  let adminSummaryChartInstance = null;
+  let adminMembersChartInstance = null;
+  let memberSummaryChartInstance = null;
+  let memberHistoryChartInstance = null;
+  let memberShareChartInstance = null;
+
+  function calculateAge(birthdateStr) {
+    if (!birthdateStr) return 'N/A';
+    const birthDate = new Date(birthdateStr);
+    if (isNaN(birthDate.getTime())) return 'N/A';
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 0 ? age : 'N/A';
+  }
+
+  let members = [];
+  let adminPassword = "admin";
+  let currentAnnouncement = "Welcome to Tyler's Integrated Farm Investment Fund!";
+  let currentLoggedInMember = null;
+
+  function saveMembersToLocal() {
+    localStorage.setItem('tif_fund_members', JSON.stringify(members));
+  }
+
+  function loadLocalData() {
+    const localSettings = localStorage.getItem('tif_fund_settings');
+    if (localSettings) {
+      try {
+        const parsed = JSON.parse(localSettings);
+        if (parsed.overallInterest !== undefined) document.getElementById('overallInterest').value = parsed.overallInterest;
+        if (parsed.customTotalContribution !== undefined) document.getElementById('customTotalContribution').value = parsed.customTotalContribution;
+        if (parsed.adminPassword) adminPassword = parsed.adminPassword;
+        if (parsed.announcement) {
+          currentAnnouncement = parsed.announcement;
+          document.getElementById('announcementText').value = currentAnnouncement;
+        }
+      } catch (e) { console.error("Local settings load error:", e); }
+    }
+
+    const localMembers = localStorage.getItem('tif_fund_members');
+    if (localMembers) {
+      try {
+        members = JSON.parse(localMembers);
+      } catch (e) {
+        members = [];
+      }
+    } else {
+      members = [];
+    }
+
+    populateTopupMemberDropdown();
+    renderTable();
+    renderCredentialsTable();
+  }
+
+  function checkExistingSession() {
+    const activeSession = localStorage.getItem('tif_active_session');
+    if (!activeSession) return;
+
+    try {
+      const sessionData = JSON.parse(activeSession);
+      
+      if (sessionData.role === 'admin') {
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('adminDashboard').classList.remove('hidden');
+        document.getElementById('memberDashboard').classList.add('hidden');
+        document.getElementById('userInfoHeader').classList.remove('hidden');
+        document.getElementById('loggedInUserLabel').innerText = "Admin Portal";
+        document.getElementById('topupDate').valueAsDate = new Date();
+        renderAdminCharts();
+      } else if (sessionData.role === 'member') {
+        const member = members.find(m => m.id === sessionData.memberId || m.username.toLowerCase() === sessionData.username.toLowerCase());
+        if (member) {
+          currentLoggedInMember = member;
+          document.getElementById('loginSection').classList.add('hidden');
+          document.getElementById('memberDashboard').classList.remove('hidden');
+          document.getElementById('adminDashboard').classList.add('hidden');
+          document.getElementById('userInfoHeader').classList.remove('hidden');
+          document.getElementById('loggedInUserLabel').innerText = `Member: ${member.name}`;
+          renderMemberDashboard(member);
+        }
+      }
+    } catch (err) {
+      console.warn("Error restoring session:", err);
+    }
+  }
+
+  // AUTO-SYNC FIREBASE LISTENER (LIVE UPDATES)
+  function listenToFirebaseData() {
+    loadLocalData();
+
+    if (firebaseEnabled && db) {
+      db.collection('settings').doc('fund').onSnapshot(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (data.overallInterest !== undefined) document.getElementById('overallInterest').value = data.overallInterest;
+          if (data.customTotalContribution !== undefined) document.getElementById('customTotalContribution').value = data.customTotalContribution;
+          if (data.adminPassword) adminPassword = data.adminPassword;
+          if (data.announcement) {
+            currentAnnouncement = data.announcement;
+            document.getElementById('announcementText').value = currentAnnouncement;
+          }
+          localStorage.setItem('tif_fund_settings', JSON.stringify(data));
+        }
+        renderTable();
+      }, err => console.warn("Firestore settings fallback:", err));
+
+      db.collection('members').onSnapshot(snapshot => {
+        members = [];
+        snapshot.forEach(doc => {
+          members.push({ id: doc.id, ...doc.data() });
+        });
+        saveMembersToLocal();
+        populateTopupMemberDropdown();
+        renderTable();
+        renderCredentialsTable();
+
+        if (currentLoggedInMember) {
+          const updated = members.find(m => m.id === currentLoggedInMember.id);
+          if (updated) {
+            currentLoggedInMember = updated;
+            renderMemberDashboard(updated);
+          }
+        }
+        checkExistingSession();
+      }, err => {
+        console.warn("Firestore members fallback:", err);
+        checkExistingSession();
+      });
+    } else {
+      checkExistingSession();
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    listenToFirebaseData();
+  });
+
+  async function saveFundSettings() {
+    const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
+    const customContrib = document.getElementById('customTotalContribution').value;
+    
+    const settingsData = {
+      overallInterest: overallInterest,
+      customTotalContribution: customContrib,
+      adminPassword: adminPassword,
+      announcement: currentAnnouncement
+    };
+
+    localStorage.setItem('tif_fund_settings', JSON.stringify(settingsData));
+
+    if (firebaseEnabled && db) {
+      try {
+        await db.collection('settings').doc('fund').set(settingsData, { merge: true });
+      } catch (err) {
+        console.warn("Firestore sync warning:", err);
+      }
+    }
+    return true;
+  }
+
+  async function btnSaveFundSettings() {
+    const confirm = await Swal.fire({
+      title: 'Save Fund Settings?',
+      text: 'Do you want to apply and save these settings?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#1e40af',
+      confirmButtonText: 'Yes, Save Settings'
+    });
+
+    if (confirm.isConfirmed) {
+      await saveFundSettings();
+      Swal.fire({
+        icon: 'success',
+        title: 'Settings Saved!',
+        text: 'Fund settings have been successfully updated.',
+        confirmButtonColor: '#1e40af'
+      });
+      renderTable();
+    }
+  }
+
+  async function changeAdminPassword() {
+    const newPass = document.getElementById('newAdminPass').value.trim();
+    if (!newPass) {
+      Swal.fire('Warning', 'Please enter a new password.', 'warning');
+      return;
+    }
+    
+    const confirm = await Swal.fire({
+      title: 'Change Admin Password?',
+      text: 'Are you sure you want to update the admin password?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d97706',
+      confirmButtonText: 'Yes, Change Password'
+    });
+
+    if (confirm.isConfirmed) {
+      adminPassword = newPass;
+      await saveFundSettings();
+      document.getElementById('newAdminPass').value = '';
+      Swal.fire({
+        icon: 'success',
+        title: 'Password Updated!',
+        text: 'Admin password was successfully changed.',
+        confirmButtonColor: '#d97706'
+      });
+    }
+  }
+
+  function formatCurrency(amount) {
+    return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(amount).replace('PHP', '₱');
+  }
+
+  function getMemberTotalContribution(member) {
+    if (!member.history || member.history.length === 0) return 0;
+    return member.history.reduce((sum, item) => sum + item.amount, 0);
+  }
+
+  function calculateTimebasedContributions(memberList = null) {
+    const targetMembers = memberList || members;
+    const now = new Date();
+    
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0,0,0,0);
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+    let weekly = 0;
+    let monthly = 0;
+    let yearly = 0;
+
+    targetMembers.forEach(m => {
+      if (m.history && Array.isArray(m.history)) {
+        m.history.forEach(h => {
+          if (h.date) {
+            const hDate = new Date(h.date);
+            const amt = parseFloat(h.amount) || 0;
+
+            if (hDate >= startOfWeek) weekly += amt;
+            if (hDate >= startOfMonth) monthly += amt;
+            if (hDate >= startOfYear) yearly += amt;
+          }
+        });
+      }
+    });
+
+    return { weekly, monthly, yearly };
+  }
+
+  function switchTab(tab) {
+    document.getElementById('tabMember').classList.toggle('active', tab === 'member');
+    document.getElementById('tabAdmin').classList.toggle('active', tab === 'admin');
+    document.getElementById('memberLoginForm').classList.toggle('hidden', tab !== 'member');
+    document.getElementById('adminLoginForm').classList.toggle('hidden', tab !== 'admin');
+  }
+
+  function loginAsAdmin() {
+    const pass = document.getElementById('adminPass').value;
+    if (pass === adminPassword) {
+      localStorage.setItem('tif_active_session', JSON.stringify({ role: 'admin' }));
+
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('adminDashboard').classList.remove('hidden');
+      document.getElementById('memberDashboard').classList.add('hidden');
+      document.getElementById('userInfoHeader').classList.remove('hidden');
+      document.getElementById('loggedInUserLabel').innerText = "Admin Portal";
+      document.getElementById('topupDate').valueAsDate = new Date();
+
+      renderAdminCharts();
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Access Denied',
+        text: 'Incorrect admin password!'
+      });
+    }
+  }
+
+  function populateTopupMemberDropdown() {
+    const select = document.getElementById('topupMemberSelect');
+    if (!select) return;
+    select.innerHTML = '';
+    members.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = m.name;
+      select.appendChild(opt);
+    });
+  }
+
+  function loginAsMember() {
+    const uInput = document.getElementById('memberUsername').value.trim();
+    const pInput = document.getElementById('memberPassword').value.trim();
+
+    if (!uInput || !pInput) {
+      Swal.fire('Warning', 'Please enter both Username and Password.', 'warning');
+      return;
+    }
+
+    const member = members.find(m => m.username && m.username.toLowerCase() === uInput.toLowerCase() && m.password === pInput);
+
+    if (!member) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Failed',
+        text: 'Incorrect Username or Password!'
+      });
+      return;
+    }
+
+    currentLoggedInMember = member;
+
+    localStorage.setItem('tif_active_session', JSON.stringify({
+      role: 'member',
+      memberId: member.id,
+      username: member.username
+    }));
+
+    document.getElementById('loginSection').classList.add('hidden');
+    document.getElementById('memberDashboard').classList.remove('hidden');
+    document.getElementById('adminDashboard').classList.add('hidden');
+    document.getElementById('userInfoHeader').classList.remove('hidden');
+    document.getElementById('loggedInUserLabel').innerText = `Member: ${member.name}`;
+
+    renderMemberDashboard(member);
+
+    if (currentAnnouncement) {
+      Swal.fire({
+        icon: 'info',
+        title: '📢 ANNOUNCEMENT',
+        html: `<p style="text-align: left; font-size: 1rem;">${currentAnnouncement.replace(/\n/g, '<br>')}</p>`,
+        confirmButtonText: 'Got it',
+        confirmButtonColor: '#1e40af'
+      });
+    }
+  }
+
+  function renderMemberDashboard(member) {
+    const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
+    const customContrib = document.getElementById('customTotalContribution').value;
+    const memberTotalContrib = getMemberTotalContribution(member);
+
+    const sumMembersContrib = members.reduce((sum, m) => sum + getMemberTotalContribution(m), 0);
+    const totalPoolContribution = (customContrib !== "" && !isNaN(parseFloat(customContrib))) ? parseFloat(customContrib) : sumMembersContrib;
+
+    const sharePercentage = totalPoolContribution > 0 ? (memberTotalContrib / totalPoolContribution) : 0;
+    const grossInterest = sharePercentage * overallInterest;
+    const feeAmount = grossInterest * ((member.feePercent || 0) / 100);
+    const netInterest = grossInterest - feeAmount;
+    const totalBalance = memberTotalContrib + netInterest;
+
+    document.getElementById('memberNameDisplay').innerText = member.name;
+    document.getElementById('mBirthDate').innerText = member.birthdate || 'Not specified';
+    document.getElementById('mAge').innerText = calculateAge(member.birthdate);
+    document.getElementById('mAddress').innerText = member.address || 'Not specified';
+
+    document.getElementById('mContribution').innerText = memberTotalContrib.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('mShare').innerText = (sharePercentage * 100).toFixed(2);
+    document.getElementById('mNetInterest').innerText = netInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('mFee').innerText = feeAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    document.getElementById('mPoolContribution').innerText = totalPoolContribution.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('mPoolInterest').innerText = overallInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('mGrossInterest').innerText = grossInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('mTotalBalance').innerText = totalBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    const historyTbody = document.getElementById('memberHistoryTableBody');
+    historyTbody.innerHTML = '';
+    
+    if (member.history && member.history.length > 0) {
+      member.history.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.date}</td>
+          <td>${item.note}</td>
+          <td class="text-right text-bold">${formatCurrency(item.amount)}</td>
+        `;
+        historyTbody.appendChild(tr);
+      });
+    } else {
+      historyTbody.innerHTML = `<tr><td colspan="3" class="text-center">No contribution history found.</td></tr>`;
+    }
+
+    renderMemberCharts(member);
+  }
+
+  function renderAdminCharts() {
+    const timebased = calculateTimebasedContributions();
+
+    const ctxSummary = document.getElementById('adminSummaryChart');
+    if (ctxSummary) {
+      if (adminSummaryChartInstance) adminSummaryChartInstance.destroy();
+
+      adminSummaryChartInstance = new Chart(ctxSummary, {
+        type: 'bar',
+        data: {
+          labels: ['This Week', 'This Month', 'This Year'],
+          datasets: [{
+            label: 'Total Contribution (₱)',
+            data: [timebased.weekly, timebased.monthly, timebased.yearly],
+            backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    const ctxMembers = document.getElementById('adminMembersChart');
+    if (ctxMembers) {
+      if (adminMembersChartInstance) adminMembersChartInstance.destroy();
+
+      const labels = members.map(m => m.name);
+      const data = members.map(m => getMemberTotalContribution(m));
+
+      adminMembersChartInstance = new Chart(ctxMembers, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: [
+              '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+              '#06b6d4', '#ec4899', '#6366f1', '#14b8a6', '#f97316'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+          }
+        }
+      });
+    }
+  }
+
+  function renderMemberCharts(member) {
+    const timebased = calculateTimebasedContributions([member]);
+
+    const ctxSummary = document.getElementById('memberSummaryChart');
+    if (ctxSummary) {
+      if (memberSummaryChartInstance) memberSummaryChartInstance.destroy();
+
+      memberSummaryChartInstance = new Chart(ctxSummary, {
+        type: 'bar',
+        data: {
+          labels: ['This Week', 'This Month', 'This Year'],
+          datasets: [{
+            label: 'Your Contributions (₱)',
+            data: [timebased.weekly, timebased.monthly, timebased.yearly],
+            backgroundColor: ['#2563eb', '#059669', '#7c3aed'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    const ctxHistory = document.getElementById('memberHistoryChart');
+    if (ctxHistory) {
+      if (memberHistoryChartInstance) memberHistoryChartInstance.destroy();
+
+      const sortedHistory = (member.history || []).slice().sort((a,b) => new Date(a.date) - new Date(b.date));
+      const labels = sortedHistory.map(h => h.date);
+      const data = sortedHistory.map(h => h.amount);
+
+      memberHistoryChartInstance = new Chart(ctxHistory, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Contribution Amount (₱)',
+            data: data,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    const ctxShare = document.getElementById('memberShareChart');
+    if (ctxShare) {
+      if (memberShareChartInstance) memberShareChartInstance.destroy();
+
+      const labels = members.map(m => m.name);
+      const data = members.map(m => getMemberTotalContribution(m));
+
+      memberShareChartInstance = new Chart(ctxShare, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: [
+              '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+              '#06b6d4', '#ec4899', '#6366f1', '#14b8a6', '#f97316'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+          }
+        }
+      });
+    }
+  }
+
+  function logout() {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You will be logged out of your session.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      confirmButtonText: 'Yes, Logout'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem('tif_active_session');
+        currentLoggedInMember = null;
+        document.getElementById('loginSection').classList.remove('hidden');
+        document.getElementById('adminDashboard').classList.add('hidden');
+        document.getElementById('memberDashboard').classList.add('hidden');
+        document.getElementById('userInfoHeader').classList.add('hidden');
+        document.getElementById('adminPass').value = '';
+        document.getElementById('memberUsername').value = '';
+        document.getElementById('memberPassword').value = '';
+      }
+    });
+  }
+
+  function updateFee(id, newFee) {
+    const parsedFee = parseFloat(newFee) || 0;
+    const member = members.find(m => m.id === id);
+    if (member) {
+      member.feePercent = parsedFee < 0 ? 0 : parsedFee;
+      saveMembersToLocal();
+      if (firebaseEnabled && db) {
+        db.collection('members').doc(id).update({ feePercent: member.feePercent }).catch(err => console.warn(err));
+      }
+      renderTable();
+    }
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('memberTableBody');
+    if (!tbody) return;
+
+    const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
+    const customContribInput = document.getElementById('customTotalContribution');
+    const sumMembersContribution = members.reduce((sum, m) => sum + getMemberTotalContribution(m), 0);
+    
+    let effectiveTotalContribution = sumMembersContribution;
+    if (customContribInput.value !== "" && !isNaN(parseFloat(customContribInput.value))) {
+      effectiveTotalContribution = parseFloat(customContribInput.value);
+    }
+
+    let totalDeductedFees = 0;
+    let totalNetInterestCredited = 0;
+
+    tbody.innerHTML = '';
+
+    members.forEach((member) => {
+      const memberTotalContrib = getMemberTotalContribution(member);
+      const sharePercentage = effectiveTotalContribution > 0 ? (memberTotalContrib / effectiveTotalContribution) : 0;
+      const grossInterest = sharePercentage * overallInterest;
+      const feePercent = member.feePercent || 0;
+      const feeAmount = grossInterest * (feePercent / 100);
+      const netInterest = grossInterest - feeAmount;
+      const totalBalance = memberTotalContrib + netInterest;
+
+      totalDeductedFees += feeAmount;
+      totalNetInterestCredited += netInterest;
+
+      const ageVal = calculateAge(member.birthdate);
+
+      const row = document.createElement('tr');
+      row.setAttribute('data-name', member.name.toLowerCase());
+      row.setAttribute('data-user', (member.username || '').toLowerCase());
+      row.setAttribute('data-address', (member.address || '').toLowerCase());
+      row.innerHTML = `
+        <td>
+          <span class="text-bold">${member.name}</span>
+          <span class="small-subtext"><i class="fa-solid fa-cake-candles"></i> ${member.birthdate || 'N/A'}</span>
+        </td>
+        <td>
+          <span>${member.address || 'N/A'}</span>
+          <span class="small-subtext text-bold">Age: ${ageVal}</span>
+        </td>
+        <td class="text-right text-bold">${formatCurrency(memberTotalContrib)}</td>
+        <td class="text-center">${(sharePercentage * 100).toFixed(2)}%</td>
+        <td class="text-center">
+          <input type="number" class="inline-fee-input" value="${feePercent}" min="0" max="100" step="any" onchange="updateFee('${member.id}', this.value)"> %
+        </td>
+        <td class="text-right">
+          <span class="text-green">+ ${formatCurrency(netInterest)}</span>
+          ${feeAmount > 0 ? `<span class="small-subtext text-red">(Gross: ${formatCurrency(grossInterest)} | Fee: -${formatCurrency(feeAmount)})</span>` : ''}
+        </td>
+        <td class="text-right text-bold">${formatCurrency(totalBalance)}</td>
+        <td class="text-center">
+          <button class="btn btn-edit" onclick="editMemberDetails('${member.id}')" title="Edit Profile"><i class="fa-solid fa-user-pen"></i> Edit</button>
+          <button class="btn btn-outline-danger" onclick="confirmDelete('${member.id}', '${member.name}')" title="Delete Member"><i class="fa-solid fa-trash"></i></button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    const netCombinedFund = effectiveTotalContribution + totalNetInterestCredited;
+    document.getElementById('totalContributionDisplay').innerText = effectiveTotalContribution.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalInterestDisplay').innerText = overallInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalFeesDisplay').innerText = totalDeductedFees.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalFundDisplay').innerText = netCombinedFund.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    filterTables();
+
+    if (!document.getElementById('adminDashboard').classList.contains('hidden')) {
+      renderAdminCharts();
+    }
+  }
+
+  function renderCredentialsTable() {
+    const tbody = document.getElementById('credentialsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    members.forEach((member) => {
+      const ageVal = calculateAge(member.birthdate);
+      const row = document.createElement('tr');
+      row.setAttribute('data-name', member.name.toLowerCase());
+      row.setAttribute('data-user', (member.username || '').toLowerCase());
+      row.setAttribute('data-address', (member.address || '').toLowerCase());
+      row.innerHTML = `
+        <td class="text-bold">${member.name}</td>
+        <td>${member.birthdate || '-'} (${ageVal} yrs)</td>
+        <td>${member.address || '-'}</td>
+        <td><code>${member.username || '-'}</code></td>
+        <td><code>${member.password || '••••••••'}</code></td>
+        <td class="text-center">
+          <button class="btn btn-edit" onclick="editMemberCredentials('${member.id}')"><i class="fa-solid fa-pen-to-square"></i> Edit Credentials</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    filterTables();
+  }
+
+  function filterTables() {
+    const query = (document.getElementById('tableSearchInput')?.value || '').toLowerCase().trim();
+    
+    const repRows = document.querySelectorAll('#memberTableBody tr');
+    repRows.forEach(row => {
+      const name = row.getAttribute('data-name') || '';
+      const user = row.getAttribute('data-user') || '';
+      const addr = row.getAttribute('data-address') || '';
+      if (!query || name.includes(query) || user.includes(query) || addr.includes(query)) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    const credRows = document.querySelectorAll('#credentialsTableBody tr');
+    credRows.forEach(row => {
+      const name = row.getAttribute('data-name') || '';
+      const user = row.getAttribute('data-user') || '';
+      const addr = row.getAttribute('data-address') || '';
+      if (!query || name.includes(query) || user.includes(query) || addr.includes(query)) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  function addMember() {
+    const nameInput = document.getElementById('memberName');
+    const contribInput = document.getElementById('memberContribInput');
+    const feeInput = document.getElementById('memberFee');
+    const birthdateInput = document.getElementById('memberBirthdate');
+    const addressInput = document.getElementById('memberAddress');
+    const usernameInput = document.getElementById('newUsername');
+    const passwordInput = document.getElementById('newPassword');
+
+    const name = nameInput.value.trim();
+    const contribution = parseFloat(contribInput.value);
+    const feePercent = parseFloat(feeInput.value) || 0;
+    const birthdate = birthdateInput.value;
+    const address = addressInput.value.trim();
+    
+    const username = usernameInput.value.trim() || name.toLowerCase().replace(/\s+/g, '');
+    const password = passwordInput.value.trim() || "password123";
+
+    if (!name || isNaN(contribution) || contribution <= 0) {
+      Swal.fire('Warning', 'Please enter a valid member name and initial contribution.', 'warning');
+      return;
+    }
+
+    if (members.some(m => m.username && m.username.toLowerCase() === username.toLowerCase())) {
+      Swal.fire('Warning', 'This username already exists. Please choose another username.', 'warning');
+      return;
+    }
+
+    const calculatedAge = calculateAge(birthdate);
+
+    Swal.fire({
+      title: 'Confirm Save New Member',
+      html: `
+        <div style="text-align: left; font-size: 0.9rem;">
+          <p><b>Name:</b> ${name}</p>
+          <p><b>Initial Contribution:</b> ${formatCurrency(contribution)}</p>
+          <p><b>Fee:</b> ${feePercent}%</p>
+          <p><b>Birth Date:</b> ${birthdate || 'N/A'} (Age: ${calculatedAge})</p>
+          <p><b>Address:</b> ${address || 'N/A'}</p>
+          <p><b>Username:</b> ${username}</p>
+          <p><b>Password:</b> ${password}</p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#1e40af',
+      confirmButtonText: 'Yes, Save Member'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const newDocId = 'mem_' + Date.now();
+        
+        const newMember = { 
+          id: newDocId,
+          name: name, 
+          feePercent: feePercent, 
+          birthdate: birthdate,
+          address: address,
+          username: username, 
+          password: password,
+          history: [
+            { date: todayStr, note: "Initial Investment", amount: contribution }
+          ]
+        };
+
+        members.push(newMember);
+        saveMembersToLocal();
+
+        if (firebaseEnabled && db) {
+          db.collection('members').doc(newDocId).set(newMember).catch(err => console.warn(err));
+        }
+
+        nameInput.value = '';
+        contribInput.value = '';
+        feeInput.value = '0';
+        birthdateInput.value = '';
+        addressInput.value = '';
+        usernameInput.value = '';
+        passwordInput.value = '';
+
+        await saveFundSettings();
+        populateTopupMemberDropdown();
+        renderTable();
+        renderCredentialsTable();
+
+        Swal.fire('Saved!', 'New member was added successfully!', 'success');
+      }
+    });
+  }
+
+  function editMemberDetails(id) {
+    const member = members.find(m => m.id === id);
+    if (!member) return;
+
+    Swal.fire({
+      title: 'Edit Member Profile',
+      html: `
+        <div style="text-align:left;">
+          <label style="font-weight:600; display:block; margin-bottom:4px;">Full Name:</label>
+          <input id="swalEditName" class="swal2-input" value="${member.name}" style="width:100%; margin:0 0 10px 0;">
+          <label style="font-weight:600; display:block; margin-bottom:4px;">Birth Date:</label>
+          <input id="swalEditBirth" type="date" class="swal2-input" value="${member.birthdate || ''}" style="width:100%; margin:0 0 10px 0;">
+          <label style="font-weight:600; display:block; margin-bottom:4px;">Address:</label>
+          <input id="swalEditAddress" class="swal2-input" value="${member.address || ''}" style="width:100%; margin:0 0 10px 0;">
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Save Profile',
+      preConfirm: () => {
+        const name = document.getElementById('swalEditName').value.trim();
+        const birthdate = document.getElementById('swalEditBirth').value;
+        const address = document.getElementById('swalEditAddress').value.trim();
+        if (!name) {
+          Swal.showValidationMessage('Name cannot be left empty.');
+          return false;
+        }
+        return { name, birthdate, address };
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        member.name = result.value.name;
+        member.birthdate = result.value.birthdate;
+        member.address = result.value.address;
+
+        saveMembersToLocal();
+
+        if (firebaseEnabled && db) {
+          db.collection('members').doc(id).update({
+            name: member.name,
+            birthdate: member.birthdate,
+            address: member.address
+          }).catch(err => console.warn(err));
+        }
+
+        populateTopupMemberDropdown();
+        renderTable();
+        renderCredentialsTable();
+        Swal.fire('Updated!', 'Member profile successfully updated.', 'success');
+      }
+    });
+  }
+
+  function editMemberCredentials(id) {
+    const member = members.find(m => m.id === id);
+    if (!member) return;
+
+    Swal.fire({
+      title: `Edit Credentials: ${member.name}`,
+      html: `
+        <div style="text-align:left;">
+          <label style="display:block; margin-bottom:5px; font-weight:600;">Username:</label>
+          <input id="swalUsername" class="swal2-input" style="width:100%; margin:0 0 15px 0;" value="${member.username || ''}">
+          <label style="display:block; margin-bottom:5px; font-weight:600;">Password:</label>
+          <input id="swalPassword" class="swal2-input" style="width:100%; margin:0;" value="${member.password || ''}">
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Save Changes',
+      preConfirm: () => {
+        const u = document.getElementById('swalUsername').value.trim();
+        const p = document.getElementById('swalPassword').value.trim();
+
+        if (!u || !p) {
+          Swal.showValidationMessage('Username and Password cannot be empty.');
+          return false;
+        }
+        return { username: u, password: p };
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        member.username = result.value.username;
+        member.password = result.value.password;
+
+        saveMembersToLocal();
+
+        if (firebaseEnabled && db) {
+          db.collection('members').doc(id).update({
+            username: result.value.username,
+            password: result.value.password
+          }).catch(err => console.warn(err));
+        }
+
+        renderCredentialsTable();
+        Swal.fire('Updated!', 'Login credentials updated successfully.', 'success');
+      }
+    });
+  }
+
+  function addContributionTopUp() {
+    const memberId = document.getElementById('topupMemberSelect').value;
+    const amount = parseFloat(document.getElementById('topupAmount').value);
+    const date = document.getElementById('topupDate').value;
+
+    const member = members.find(m => m.id === memberId);
+    if (!member || isNaN(amount) || amount <= 0 || !date) {
+      Swal.fire('Warning', 'Please select a member, valid amount, and date.', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Confirm Additional Contribution',
+      html: `<p>Save top-up <b>${formatCurrency(amount)}</b> for <b>${member.name}</b> on <b>${date}</b>?</p>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#1e40af',
+      confirmButtonText: 'Yes, Save Top-Up'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        if (!member.history) member.history = [];
+        member.history.push({ date: date, note: "Additional Top-Up", amount: amount });
+
+        saveMembersToLocal();
+
+        if (firebaseEnabled && db) {
+          db.collection('members').doc(memberId).update({ history: member.history }).catch(err => console.warn(err));
+        }
+
+        document.getElementById('topupAmount').value = '';
+
+        await saveFundSettings();
+        renderTable();
+
+        if (currentLoggedInMember && currentLoggedInMember.id === member.id) {
+          renderMemberDashboard(member);
+        }
+
+        Swal.fire('Saved!', `Successfully added top-up for ${member.name}!`, 'success');
+      }
+    });
+  }
+
+  function confirmDelete(id, memberName) {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: `Do you really want to delete member "${memberName}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      confirmButtonText: 'Yes, Delete'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        members = members.filter(m => m.id !== id);
+        saveMembersToLocal();
+
+        if (firebaseEnabled && db) {
+          db.collection('members').doc(id).delete().catch(err => console.warn(err));
+        }
+
+        populateTopupMemberDropdown();
+        renderTable();
+        renderCredentialsTable();
+        Swal.fire('Deleted!', `Member "${memberName}" has been removed.`, 'success');
+      }
+    });
+  }
+
+  async function saveAnnouncement() {
+    const text = document.getElementById('announcementText').value.trim();
+    const confirm = await Swal.fire({
+      title: 'Save Announcement?',
+      text: 'This will show up when members log in.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#16a34a',
+      confirmButtonText: 'Yes, Save'
+    });
+
+    if (confirm.isConfirmed) {
+      currentAnnouncement = text;
+      await saveFundSettings();
+      Swal.fire('Saved!', 'Announcement updated successfully.', 'success');
+    }
+  }
+
+  function exportDataBackup() {
+    const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
+    const customContrib = document.getElementById('customTotalContribution').value;
+
+    const backupObject = {
+      exportDate: new Date().toISOString(),
+      settings: {
+        overallInterest: overallInterest,
+        customTotalContribution: customContrib,
+        adminPassword: adminPassword,
+        announcement: currentAnnouncement
+      },
+      members: members
+    };
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupObject, null, 2));
+    const downloadAnchor = document.createElement('a');
+    const dateStr = new Date().toISOString().split('T')[0];
+    
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `TIF_Fund_Backup_${dateStr}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+
+    Swal.fire('Exported!', 'Backup file downloaded successfully.', 'success');
+  }
+
+  function triggerRestore() {
+    document.getElementById('restoreFileInput').value = '';
+    document.getElementById('restoreFileInput').click();
+  }
+
+  function importDataBackup(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        if (!importedData) throw new Error("Invalid format.");
+
+        const confirmRestore = await Swal.fire({
+          title: 'Confirm Data Restore',
+          text: 'This action will replace all existing members and settings.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d97706',
+          confirmButtonText: 'Yes, Restore'
+        });
+
+        if (!confirmRestore.isConfirmed) return;
+
+        if (importedData.settings) {
+          if (importedData.settings.overallInterest !== undefined) document.getElementById('overallInterest').value = importedData.settings.overallInterest;
+          if (importedData.settings.customTotalContribution !== undefined) document.getElementById('customTotalContribution').value = importedData.settings.customTotalContribution;
+          if (importedData.settings.adminPassword) adminPassword = importedData.settings.adminPassword;
+          if (importedData.settings.announcement) {
+            currentAnnouncement = importedData.settings.announcement;
+            document.getElementById('announcementText').value = currentAnnouncement;
+          }
+          await saveFundSettings();
+        }
+
+        const importedMembers = importedData.members || importedData;
+        if (Array.isArray(importedMembers)) {
+          members = importedMembers;
+          saveMembersToLocal();
+
+          if (firebaseEnabled && db) {
+            const batch = db.batch();
+            members.forEach(m => {
+              const docId = m.id || ('mem_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4));
+              m.id = docId;
+              batch.set(db.collection('members').doc(docId), m, { merge: true });
+            });
+            await batch.commit();
+          }
+
+          populateTopupMemberDropdown();
+          renderTable();
+          renderCredentialsTable();
+          Swal.fire('Restored!', 'All records have been restored successfully.', 'success');
+        }
+      } catch (err) {
+        Swal.fire('Error', 'Failed to read backup JSON file.', 'error');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function exportToWord() {
+    const dateStr = new Date().toLocaleDateString('en-PH');
+    const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
+    const customContribInput = document.getElementById('customTotalContribution');
+    const sumMembersContribution = members.reduce((sum, m) => sum + getMemberTotalContribution(m), 0);
+    
+    let effectiveTotalContribution = sumMembersContribution;
+    if (customContribInput.value !== "" && !isNaN(parseFloat(customContribInput.value))) {
+      effectiveTotalContribution = parseFloat(customContribInput.value);
+    }
+
+    let rowsHTML = '';
+    members.forEach((member) => {
+      const memberTotalContrib = getMemberTotalContribution(member);
+      const sharePercentage = effectiveTotalContribution > 0 ? (memberTotalContrib / effectiveTotalContribution) : 0;
+      const grossInterest = sharePercentage * overallInterest;
+      const feePercent = member.feePercent || 0;
+      const feeAmount = grossInterest * (feePercent / 100);
+      const netInterest = grossInterest - feeAmount;
+      const totalBalance = memberTotalContrib + netInterest;
+
+      rowsHTML += `
+        <tr>
+          <td style="border:1px solid #ccc; padding:6px;"><b>${member.name}</b></td>
+          <td style="border:1px solid #ccc; padding:6px;">${member.address || '-'} (Age: ${calculateAge(member.birthdate)})</td>
+          <td style="border:1px solid #ccc; padding:6px; text-align:right;">${formatCurrency(memberTotalContrib)}</td>
+          <td style="border:1px solid #ccc; padding:6px; text-align:center;">${(sharePercentage * 100).toFixed(2)}%</td>
+          <td style="border:1px solid #ccc; padding:6px; text-align:center;">${feePercent}%</td>
+          <td style="border:1px solid #ccc; padding:6px; text-align:right;">${formatCurrency(netInterest)}</td>
+          <td style="border:1px solid #ccc; padding:6px; text-align:right;"><b>${formatCurrency(totalBalance)}</b></td>
+        </tr>
+      `;
+    });
+
+    let docHTML = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head><meta charset='utf-8'><title>Fund Report</title>
+      <style>
+        body { font-family: Arial, sans-serif; font-size: 10pt; }
+        h1 { color: #1e40af; font-size: 14pt; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th { background-color: #1e40af; color: #ffffff; border: 1px solid #ccc; padding: 6px; text-align: left; }
+      </style>
+      </head>
+      <body>
+        <h1>TYLER'S INTEGRATED FARM INVESTMENT FUND REPORT</h1>
+        <p><b>Date Generated:</b> ${dateStr}</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Member Name</th>
+              <th>Address / Age</th>
+              <th style="text-align:right;">Contribution</th>
+              <th style="text-align:center;">Share (%)</th>
+              <th style="text-align:center;">Fee (%)</th>
+              <th style="text-align:right;">Net Interest</th>
+              <th style="text-align:right;">New Net Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHTML}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+
+    const blob = new Blob(['\ufeff' + docHTML], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Fund_Report_${dateStr.replace(/\//g, '-')}.doc`;
+    a.click();
+  }
+
+  /* CALCULATOR FUNCTIONS */
+  function toggleCalculator() {
+    document.getElementById('floatingCalc').classList.toggle('active');
+  }
+
+  function appendCalc(val) {
+    const display = document.getElementById('calcDisplay');
+    if (display.value === '0' || display.value === 'Error') display.value = val;
+    else display.value += val;
+  }
+
+  function clearCalc() {
+    document.getElementById('calcDisplay').value = '0';
+    document.getElementById('calcHistory').innerText = '';
+  }
+
+  function calcFunc(type) {
+    const display = document.getElementById('calcDisplay');
+    let val = parseFloat(display.value);
+    if (isNaN(val)) return;
+    if (type === 'sqrt') display.value = Math.sqrt(val);
+    else if (type === 'sqr') display.value = val * val;
+    else if (type === 'pm') display.value = val * -1;
+  }
+
+  function calculateCalc() {
+    const display = document.getElementById('calcDisplay');
+    try {
+      let expr = display.value.replace(/%/g, '/100');
+      display.value = Number(Function('"use strict";return (' + expr + ')')().toFixed(8)).toString();
+    } catch (e) {
+      display.value = 'Error';
+    }
+  }
+</script>
+</body>
+</html>
