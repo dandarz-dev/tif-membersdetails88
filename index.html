@@ -286,6 +286,16 @@
     .btn-logout { background-color: #dc2626; }
     .btn-logout:hover { background-color: #b91c1c; }
 
+    .btn-gcash {
+      background-color: #005ce6;
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0, 92, 230, 0.3);
+    }
+    .btn-gcash:hover {
+      background-color: #0046b3;
+    }
+
     .btn-print { background-color: #1e3a8a; color: #fff; }
     .btn-word { background-color: #2b579a; color: #fff; }
 
@@ -624,9 +634,15 @@
 
     <!-- MEMBER DASHBOARD -->
     <div id="memberDashboard" class="hidden">
-      <div class="card-box" style="background: #eff6ff; border-color: #bfdbfe;">
-        <h2 class="section-title" style="color: #1e40af;"><i class="fa-solid fa-circle-user"></i> Welcome, <span id="memberNameDisplay"></span>!</h2>
-        <p style="margin: 0; color: #1e3a8a; font-size: 0.9rem;">Here is your complete personal profile and investment breakdown.</p>
+      <div class="card-box" style="background: #eff6ff; border-color: #bfdbfe; display: flex; flex-direction: column; gap: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h2 class="section-title" style="color: #1e40af; margin-bottom: 4px;"><i class="fa-solid fa-circle-user"></i> Welcome, <span id="memberNameDisplay"></span>!</h2>
+            <p style="margin: 0; color: #1e3a8a; font-size: 0.9rem;">Here is your complete personal profile and investment breakdown.</p>
+          </div>
+          <!-- GCASH PAYMENT BUTTON -->
+          <button class="btn btn-gcash" onclick="showGcashQrModal()"><i class="fa-solid fa-qrcode"></i> PAY CONTRIBUTION via GCASH</button>
+        </div>
       </div>
 
       <!-- MEMBER PROFILE SUMMARY -->
@@ -1140,6 +1156,27 @@
   window.addEventListener('DOMContentLoaded', () => {
     listenToFirebaseData();
   });
+
+  // GCASH QR POP-UP MODAL FUNCTION
+  function showGcashQrModal() {
+    Swal.fire({
+      title: 'GCASH Payment QR Code',
+      html: `
+        <div style="text-align: center;">
+          <img src="gcash.PNG" alt="GCash QR Code" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); margin-bottom: 8px;">
+          <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 8px 12px; border-radius: 6px; font-weight: 700; font-size: 0.95rem; margin-bottom: 12px;">
+            <i class="fa-solid fa-mobile-screen-button"></i> GCash No. 0966 5896709 D...O D
+          </div>
+          <div style="background-color: #fef2f2; border: 1px solid #fecaca; color: #dc2626; padding: 10px 12px; border-radius: 6px; font-weight: 600; font-size: 0.88rem;">
+            <i class="fa-solid fa-triangle-exclamation"></i> Please save your gcash payment receipt, for future refference!
+          </div>
+        </div>
+      `,
+      showCloseButton: true,
+      confirmButtonText: 'Close',
+      confirmButtonColor: '#005ce6'
+    });
+  }
 
   async function saveFundSettings() {
     const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
