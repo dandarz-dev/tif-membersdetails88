@@ -224,7 +224,8 @@
     @media (min-width: 768px) {
       .grid-2 { grid-template-columns: 1fr 1fr; gap: 16px; }
       .grid-3 { grid-template-columns: 1.5fr 1fr 1fr auto; gap: 12px; }
-      .grid-7 { grid-template-columns: repeat(4, 1fr); gap: 12px; }
+      .grid-4 { grid-template-columns: repeat(4, 1fr); gap: 12px; }
+      .grid-7 { grid-template-columns: repeat(3, 1fr); gap: 12px; }
     }
 
     .form-group { margin-bottom: 12px; }
@@ -351,7 +352,7 @@
     }
 
     @media (min-width: 480px) { .dashboard-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (min-width: 900px) { .dashboard-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; } }
+    @media (min-width: 900px) { .dashboard-grid { grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 28px; } }
 
     .dash-card {
       background: #ffffff;
@@ -365,6 +366,7 @@
     .dash-card.green { border-left-color: var(--success-color); }
     .dash-card.red { border-left-color: var(--danger-color); }
     .dash-card.purple { border-left-color: #8b5cf6; }
+    .dash-card.orange { border-left-color: #f59e0b; }
 
     .dash-card .label {
       font-size: 0.75rem;
@@ -660,6 +662,11 @@
           <div class="label">Your Total Contribution</div>
           <div class="value">₱<span id="mContribution">0.00</span></div>
         </div>
+        <!-- REFERRAL POINTS INDICATOR SA MEMBER DASHBOARD -->
+        <div class="dash-card orange">
+          <div class="label">Referral Points</div>
+          <div class="value"><span id="mReferralPoints">0</span> pts (<span id="mReferralValue">₱0.00</span>)</div>
+        </div>
         <div class="dash-card purple">
           <div class="label">Your Share (%)</div>
           <div class="value"><span id="mShare">0.00</span>%</div>
@@ -720,6 +727,7 @@
         <p style="font-size: 0.9rem;"><strong>Total Pool Contribution:</strong> ₱<span id="mPoolContribution">0.00</span></p>
         <p style="font-size: 0.9rem;"><strong>Total Interest Distributed:</strong> ₱<span id="mPoolInterest">0.00</span></p>
         <p style="font-size: 0.9rem;"><strong>Gross Interest Earned:</strong> ₱<span id="mGrossInterest">0.00</span></p>
+        <p style="font-size: 0.9rem; color: #d97706;"><strong>Referral Reward Value:</strong> <span id="mReferralRewardDetail">₱0.00</span></p>
         <hr>
         <h2 style="color: var(--success-color); margin-bottom:0; font-size: 1.3rem;">New Net Balance: ₱<span id="mTotalBalance">0.00</span></h2>
       </div>
@@ -757,7 +765,7 @@
         <button class="btn" style="background-color: #16a34a;" onclick="saveAnnouncement()"><i class="fa-solid fa-floppy-disk"></i> Save Announcement</button>
       </div>
 
-      <!-- 1. ADD NEW MEMBER FORM -->
+      <!-- 1. ADD NEW MEMBER FORM WITH REFERRAL SELECTION -->
       <div class="card-box">
         <h2 class="section-title"><i class="fa-solid fa-user-plus"></i> 1. Add New Member</h2>
         <div class="grid-7">
@@ -772,6 +780,17 @@
           <div class="form-group">
             <label for="memberFee">Fee (%)</label>
             <input type="number" id="memberFee" placeholder="0" min="0" max="100" value="0" step="any">
+          </div>
+          <!-- REFERRED BY SELECTION -->
+          <div class="form-group">
+            <label for="referrerSelect">Referred By (Level 1 Member)</label>
+            <select id="referrerSelect">
+              <option value="">-- None (Direct Join) --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="memberPointsInput">Initial Points</label>
+            <input type="number" id="memberPointsInput" placeholder="0" min="0" value="0" step="any">
           </div>
           <div class="form-group">
             <label for="memberBirthdate">Birth Date</label>
@@ -814,9 +833,10 @@
 
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
 
-        <!-- 3. FUND SETTINGS -->
-        <h2 class="section-title"><i class="fa-solid fa-coins"></i> 3. Fund Settings</h2>
-        <div class="grid-2">
+        <!-- 3. FUND SETTINGS & EDITABLE 3-LEVEL POINT CONVERSION -->
+        <h2 class="section-title"><i class="fa-solid fa-coins"></i> 3. Fund Settings & Up to 3-Level Reward Points System</h2>
+        
+        <div class="grid-3" style="margin-bottom: 12px;">
           <div class="form-group">
             <label for="overallInterest">Total Earned Interest (₱)</label>
             <input type="number" id="overallInterest" placeholder="0.00" min="0" step="any" oninput="renderTable()">
@@ -824,6 +844,29 @@
           <div class="form-group">
             <label for="customTotalContribution">Total Pool Contribution (₱)</label>
             <input type="number" id="customTotalContribution" placeholder="Auto-calculated" min="0" step="any" oninput="renderTable()">
+          </div>
+          <div class="form-group">
+            <label for="pointValueInput">1 Referral Point Value (₱)</label>
+            <input type="number" id="pointValueInput" value="100" min="0" step="any" oninput="renderTable()">
+          </div>
+        </div>
+
+        <!-- EDITABLE 3-LEVEL POINTS REWARD CONFIGURATION -->
+        <div style="background: #f1f5f9; border: 1px dashed #cbd5e1; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+          <h4 style="margin: 0 0 10px 0; font-size: 0.9rem; color: #1e40af;"><i class="fa-solid fa-sitemap"></i> Referral Level Rewards Setup (Points per Referral)</h4>
+          <div class="grid-3">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="level1Points">Level 1 (Direct Referral Points)</label>
+              <input type="number" id="level1Points" value="1" min="0" step="any">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="level2Points">Level 2 (Indirect Referral Points)</label>
+              <input type="number" id="level2Points" value="0.5" min="0" step="any">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="level3Points">Level 3 (Indirect Referral Points)</label>
+              <input type="number" id="level3Points" value="0.25" min="0" step="any">
+            </div>
           </div>
         </div>
         
@@ -857,6 +900,10 @@
           <div class="label">Total Processing Fees</div>
           <div class="value">₱<span id="totalFeesDisplay">0.00</span></div>
         </div>
+        <div class="dash-card orange">
+          <div class="label">Total Referral Value</div>
+          <div class="value">₱<span id="totalReferralValDisplay">0.00</span></div>
+        </div>
         <div class="dash-card purple">
           <div class="label">Net Combined Fund</div>
           <div class="value">₱<span id="totalFundDisplay">0.00</span></div>
@@ -876,6 +923,7 @@
               <th>Member Profile</th>
               <th>Address / Age</th>
               <th class="text-right">Contribution</th>
+              <th class="text-center">Referral Points</th>
               <th class="text-center">Share (%)</th>
               <th class="text-center">Fee Deduct (%)</th>
               <th class="text-right">Net Credited Interest</th>
@@ -1050,6 +1098,10 @@
         const parsed = JSON.parse(localSettings);
         if (parsed.overallInterest !== undefined) document.getElementById('overallInterest').value = parsed.overallInterest;
         if (parsed.customTotalContribution !== undefined) document.getElementById('customTotalContribution').value = parsed.customTotalContribution;
+        if (parsed.pointValue !== undefined) document.getElementById('pointValueInput').value = parsed.pointValue;
+        if (parsed.level1Points !== undefined) document.getElementById('level1Points').value = parsed.level1Points;
+        if (parsed.level2Points !== undefined) document.getElementById('level2Points').value = parsed.level2Points;
+        if (parsed.level3Points !== undefined) document.getElementById('level3Points').value = parsed.level3Points;
         if (parsed.adminPassword) adminPassword = parsed.adminPassword;
         if (parsed.announcement) {
           currentAnnouncement = parsed.announcement;
@@ -1116,6 +1168,10 @@
           const data = doc.data();
           if (data.overallInterest !== undefined) document.getElementById('overallInterest').value = data.overallInterest;
           if (data.customTotalContribution !== undefined) document.getElementById('customTotalContribution').value = data.customTotalContribution;
+          if (data.pointValue !== undefined) document.getElementById('pointValueInput').value = data.pointValue;
+          if (data.level1Points !== undefined) document.getElementById('level1Points').value = data.level1Points;
+          if (data.level2Points !== undefined) document.getElementById('level2Points').value = data.level2Points;
+          if (data.level3Points !== undefined) document.getElementById('level3Points').value = data.level3Points;
           if (data.adminPassword) adminPassword = data.adminPassword;
           if (data.announcement) {
             currentAnnouncement = data.announcement;
@@ -1181,10 +1237,18 @@
   async function saveFundSettings() {
     const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
     const customContrib = document.getElementById('customTotalContribution').value;
+    const pointValue = parseFloat(document.getElementById('pointValueInput').value) || 100;
+    const level1Points = parseFloat(document.getElementById('level1Points').value) || 0;
+    const level2Points = parseFloat(document.getElementById('level2Points').value) || 0;
+    const level3Points = parseFloat(document.getElementById('level3Points').value) || 0;
     
     const settingsData = {
       overallInterest: overallInterest,
       customTotalContribution: customContrib,
+      pointValue: pointValue,
+      level1Points: level1Points,
+      level2Points: level2Points,
+      level3Points: level3Points,
       adminPassword: adminPassword,
       announcement: currentAnnouncement
     };
@@ -1204,7 +1268,7 @@
   async function btnSaveFundSettings() {
     const confirm = await Swal.fire({
       title: 'Save Fund Settings?',
-      text: 'Do you want to apply and save these settings?',
+      text: 'Do you want to apply and save these settings and referral reward levels?',
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#1e40af',
@@ -1325,14 +1389,27 @@
 
   function populateTopupMemberDropdown() {
     const select = document.getElementById('topupMemberSelect');
-    if (!select) return;
-    select.innerHTML = '';
-    members.forEach(m => {
-      const opt = document.createElement('option');
-      opt.value = m.id;
-      opt.textContent = m.name;
-      select.appendChild(opt);
-    });
+    const referrerSelect = document.getElementById('referrerSelect');
+
+    if (select) {
+      select.innerHTML = '';
+      members.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = m.name;
+        select.appendChild(opt);
+      });
+    }
+
+    if (referrerSelect) {
+      referrerSelect.innerHTML = '<option value="">-- None (Direct Join) --</option>';
+      members.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = m.name;
+        referrerSelect.appendChild(opt);
+      });
+    }
   }
 
   function loginAsMember() {
@@ -1385,6 +1462,7 @@
   function renderMemberDashboard(member) {
     const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
     const customContrib = document.getElementById('customTotalContribution').value;
+    const pointVal = parseFloat(document.getElementById('pointValueInput').value) || 100;
     const memberTotalContrib = getMemberTotalContribution(member);
 
     const sumMembersContrib = members.reduce((sum, m) => sum + getMemberTotalContribution(m), 0);
@@ -1394,7 +1472,11 @@
     const grossInterest = sharePercentage * overallInterest;
     const feeAmount = grossInterest * ((member.feePercent || 0) / 100);
     const netInterest = grossInterest - feeAmount;
-    const totalBalance = memberTotalContrib + netInterest;
+
+    const referralPts = member.referralPoints || 0;
+    const referralValue = referralPts * pointVal;
+    
+    const totalBalance = memberTotalContrib + netInterest + referralValue;
 
     document.getElementById('memberNameDisplay').innerText = member.name;
     document.getElementById('mBirthDate').innerText = member.birthdate || 'Not specified';
@@ -1402,6 +1484,8 @@
     document.getElementById('mAddress').innerText = member.address || 'Not specified';
 
     document.getElementById('mContribution').innerText = memberTotalContrib.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('mReferralPoints').innerText = referralPts;
+    document.getElementById('mReferralValue').innerText = formatCurrency(referralValue);
     document.getElementById('mShare').innerText = (sharePercentage * 100).toFixed(2);
     document.getElementById('mNetInterest').innerText = netInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('mFee').innerText = feeAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -1409,6 +1493,7 @@
     document.getElementById('mPoolContribution').innerText = totalPoolContribution.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('mPoolInterest').innerText = overallInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('mGrossInterest').innerText = grossInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('mReferralRewardDetail').innerText = `${referralPts} pts × ${formatCurrency(pointVal)} = ${formatCurrency(referralValue)}`;
     document.getElementById('mTotalBalance').innerText = totalBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
     const historyTbody = document.getElementById('memberHistoryTableBody');
@@ -1612,12 +1697,27 @@
     }
   }
 
+  function updateReferralPoints(id, newPoints) {
+    const parsedPoints = parseFloat(newPoints) || 0;
+    const member = members.find(m => m.id === id);
+    if (member) {
+      member.referralPoints = parsedPoints < 0 ? 0 : parsedPoints;
+      saveMembersToLocal();
+      if (firebaseEnabled && db) {
+        db.collection('members').doc(id).update({ referralPoints: member.referralPoints }).catch(err => console.warn(err));
+      }
+      renderTable();
+    }
+  }
+
   function renderTable() {
     const tbody = document.getElementById('memberTableBody');
     if (!tbody) return;
 
     const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
     const customContribInput = document.getElementById('customTotalContribution');
+    const pointVal = parseFloat(document.getElementById('pointValueInput').value) || 100;
+
     const sumMembersContribution = members.reduce((sum, m) => sum + getMemberTotalContribution(m), 0);
     
     let effectiveTotalContribution = sumMembersContribution;
@@ -1627,6 +1727,7 @@
 
     let totalDeductedFees = 0;
     let totalNetInterestCredited = 0;
+    let totalReferralVal = 0;
 
     tbody.innerHTML = '';
 
@@ -1637,10 +1738,14 @@
       const feePercent = member.feePercent || 0;
       const feeAmount = grossInterest * (feePercent / 100);
       const netInterest = grossInterest - feeAmount;
-      const totalBalance = memberTotalContrib + netInterest;
+
+      const referralPts = member.referralPoints || 0;
+      const referralVal = referralPts * pointVal;
+      const totalBalance = memberTotalContrib + netInterest + referralVal;
 
       totalDeductedFees += feeAmount;
       totalNetInterestCredited += netInterest;
+      totalReferralVal += referralVal;
 
       const ageVal = calculateAge(member.birthdate);
 
@@ -1658,6 +1763,10 @@
           <span class="small-subtext text-bold">Age: ${ageVal}</span>
         </td>
         <td class="text-right text-bold">${formatCurrency(memberTotalContrib)}</td>
+        <td class="text-center">
+          <input type="number" class="inline-fee-input" value="${referralPts}" min="0" step="any" onchange="updateReferralPoints('${member.id}', this.value)"> pts
+          <span class="small-subtext">(${formatCurrency(referralVal)})</span>
+        </td>
         <td class="text-center">${(sharePercentage * 100).toFixed(2)}%</td>
         <td class="text-center">
           <input type="number" class="inline-fee-input" value="${feePercent}" min="0" max="100" step="any" onchange="updateFee('${member.id}', this.value)"> %
@@ -1675,10 +1784,11 @@
       tbody.appendChild(row);
     });
 
-    const netCombinedFund = effectiveTotalContribution + totalNetInterestCredited;
+    const netCombinedFund = effectiveTotalContribution + totalNetInterestCredited + totalReferralVal;
     document.getElementById('totalContributionDisplay').innerText = effectiveTotalContribution.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('totalInterestDisplay').innerText = overallInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('totalFeesDisplay').innerText = totalDeductedFees.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalReferralValDisplay').innerText = totalReferralVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('totalFundDisplay').innerText = netCombinedFund.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
     filterTables();
@@ -1747,16 +1857,20 @@
     const nameInput = document.getElementById('memberName');
     const contribInput = document.getElementById('memberContribInput');
     const feeInput = document.getElementById('memberFee');
+    const pointsInput = document.getElementById('memberPointsInput');
     const birthdateInput = document.getElementById('memberBirthdate');
     const addressInput = document.getElementById('memberAddress');
     const usernameInput = document.getElementById('newUsername');
     const passwordInput = document.getElementById('newPassword');
+    const referrerSelect = document.getElementById('referrerSelect');
 
     const name = nameInput.value.trim();
     const contribution = parseFloat(contribInput.value);
     const feePercent = parseFloat(feeInput.value) || 0;
+    const initialPoints = parseFloat(pointsInput.value) || 0;
     const birthdate = birthdateInput.value;
     const address = addressInput.value.trim();
+    const referrerId = referrerSelect ? referrerSelect.value : "";
     
     const username = usernameInput.value.trim() || name.toLowerCase().replace(/\s+/g, '');
     const password = passwordInput.value.trim() || "password123";
@@ -1771,6 +1885,28 @@
       return;
     }
 
+    const l1PointsVal = parseFloat(document.getElementById('level1Points').value) || 0;
+    const l2PointsVal = parseFloat(document.getElementById('level2Points').value) || 0;
+    const l3PointsVal = parseFloat(document.getElementById('level3Points').value) || 0;
+
+    const level1Member = members.find(m => m.id === referrerId);
+    const level2Member = level1Member ? members.find(m => m.id === level1Member.referredBy) : null;
+    const level3Member = level2Member ? members.find(m => m.id === level2Member.referredBy) : null;
+
+    let rewardSummaryHTML = '';
+    if (level1Member) {
+      rewardSummaryHTML += `<p><b>L1 Direct Referrer (${level1Member.name}):</b> +${l1PointsVal} pts</p>`;
+    }
+    if (level2Member) {
+      rewardSummaryHTML += `<p><b>L2 Indirect Referrer (${level2Member.name}):</b> +${l2PointsVal} pts</p>`;
+    }
+    if (level3Member) {
+      rewardSummaryHTML += `<p><b>L3 Indirect Referrer (${level3Member.name}):</b> +${l3PointsVal} pts</p>`;
+    }
+    if (!rewardSummaryHTML) {
+      rewardSummaryHTML = `<p><b>Referred By:</b> None (Direct Join)</p>`;
+    }
+
     const calculatedAge = calculateAge(birthdate);
 
     Swal.fire({
@@ -1780,6 +1916,10 @@
           <p><b>Name:</b> ${name}</p>
           <p><b>Initial Contribution:</b> ${formatCurrency(contribution)}</p>
           <p><b>Fee:</b> ${feePercent}%</p>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:8px; border-radius:6px; margin:8px 0;">
+            ${rewardSummaryHTML}
+          </div>
+          <p><b>Initial Points:</b> ${initialPoints} pts</p>
           <p><b>Birth Date:</b> ${birthdate || 'N/A'} (Age: ${calculatedAge})</p>
           <p><b>Address:</b> ${address || 'N/A'}</p>
           <p><b>Username:</b> ${username}</p>
@@ -1799,6 +1939,8 @@
           id: newDocId,
           name: name, 
           feePercent: feePercent, 
+          referralPoints: initialPoints,
+          referredBy: referrerId || null,
           birthdate: birthdate,
           address: address,
           username: username, 
@@ -1809,6 +1951,27 @@
         };
 
         members.push(newMember);
+
+        // AUTOMATIC UP TO 3-LEVEL POINTS REWARD DISTRIBUTION
+        if (level1Member) {
+          level1Member.referralPoints = (level1Member.referralPoints || 0) + l1PointsVal;
+          if (firebaseEnabled && db) {
+            db.collection('members').doc(level1Member.id).update({ referralPoints: level1Member.referralPoints }).catch(err => console.warn(err));
+          }
+        }
+        if (level2Member) {
+          level2Member.referralPoints = (level2Member.referralPoints || 0) + l2PointsVal;
+          if (firebaseEnabled && db) {
+            db.collection('members').doc(level2Member.id).update({ referralPoints: level2Member.referralPoints }).catch(err => console.warn(err));
+          }
+        }
+        if (level3Member) {
+          level3Member.referralPoints = (level3Member.referralPoints || 0) + l3PointsVal;
+          if (firebaseEnabled && db) {
+            db.collection('members').doc(level3Member.id).update({ referralPoints: level3Member.referralPoints }).catch(err => console.warn(err));
+          }
+        }
+
         saveMembersToLocal();
 
         if (firebaseEnabled && db) {
@@ -1818,17 +1981,19 @@
         nameInput.value = '';
         contribInput.value = '';
         feeInput.value = '0';
+        pointsInput.value = '0';
         birthdateInput.value = '';
         addressInput.value = '';
         usernameInput.value = '';
         passwordInput.value = '';
+        if (referrerSelect) referrerSelect.value = '';
 
         await saveFundSettings();
         populateTopupMemberDropdown();
         renderTable();
         renderCredentialsTable();
 
-        Swal.fire('Saved!', 'New member was added successfully!', 'success');
+        Swal.fire('Saved!', `New member added! 3-level referral points distributed.`, 'success');
       }
     });
   }
@@ -1843,6 +2008,8 @@
         <div style="text-align:left;">
           <label style="font-weight:600; display:block; margin-bottom:4px;">Full Name:</label>
           <input id="swalEditName" class="swal2-input" value="${member.name}" style="width:100%; margin:0 0 10px 0;">
+          <label style="font-weight:600; display:block; margin-bottom:4px;">Referral Points:</label>
+          <input id="swalEditPoints" type="number" step="any" class="swal2-input" value="${member.referralPoints || 0}" style="width:100%; margin:0 0 10px 0;">
           <label style="font-weight:600; display:block; margin-bottom:4px;">Birth Date:</label>
           <input id="swalEditBirth" type="date" class="swal2-input" value="${member.birthdate || ''}" style="width:100%; margin:0 0 10px 0;">
           <label style="font-weight:600; display:block; margin-bottom:4px;">Address:</label>
@@ -1853,17 +2020,19 @@
       confirmButtonText: 'Save Profile',
       preConfirm: () => {
         const name = document.getElementById('swalEditName').value.trim();
+        const referralPoints = parseFloat(document.getElementById('swalEditPoints').value) || 0;
         const birthdate = document.getElementById('swalEditBirth').value;
         const address = document.getElementById('swalEditAddress').value.trim();
         if (!name) {
           Swal.showValidationMessage('Name cannot be left empty.');
           return false;
         }
-        return { name, birthdate, address };
+        return { name, referralPoints, birthdate, address };
       }
     }).then((result) => {
       if (result.isConfirmed) {
         member.name = result.value.name;
+        member.referralPoints = result.value.referralPoints;
         member.birthdate = result.value.birthdate;
         member.address = result.value.address;
 
@@ -1872,6 +2041,7 @@
         if (firebaseEnabled && db) {
           db.collection('members').doc(id).update({
             name: member.name,
+            referralPoints: member.referralPoints,
             birthdate: member.birthdate,
             address: member.address
           }).catch(err => console.warn(err));
@@ -2020,12 +2190,17 @@
   function exportDataBackup() {
     const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
     const customContrib = document.getElementById('customTotalContribution').value;
+    const pointValue = parseFloat(document.getElementById('pointValueInput').value) || 100;
 
     const backupObject = {
       exportDate: new Date().toISOString(),
       settings: {
         overallInterest: overallInterest,
         customTotalContribution: customContrib,
+        pointValue: pointValue,
+        level1Points: parseFloat(document.getElementById('level1Points').value) || 0,
+        level2Points: parseFloat(document.getElementById('level2Points').value) || 0,
+        level3Points: parseFloat(document.getElementById('level3Points').value) || 0,
         adminPassword: adminPassword,
         announcement: currentAnnouncement
       },
@@ -2074,6 +2249,10 @@
         if (importedData.settings) {
           if (importedData.settings.overallInterest !== undefined) document.getElementById('overallInterest').value = importedData.settings.overallInterest;
           if (importedData.settings.customTotalContribution !== undefined) document.getElementById('customTotalContribution').value = importedData.settings.customTotalContribution;
+          if (importedData.settings.pointValue !== undefined) document.getElementById('pointValueInput').value = importedData.settings.pointValue;
+          if (importedData.settings.level1Points !== undefined) document.getElementById('level1Points').value = importedData.settings.level1Points;
+          if (importedData.settings.level2Points !== undefined) document.getElementById('level2Points').value = importedData.settings.level2Points;
+          if (importedData.settings.level3Points !== undefined) document.getElementById('level3Points').value = importedData.settings.level3Points;
           if (importedData.settings.adminPassword) adminPassword = importedData.settings.adminPassword;
           if (importedData.settings.announcement) {
             currentAnnouncement = importedData.settings.announcement;
@@ -2113,6 +2292,7 @@
     const dateStr = new Date().toLocaleDateString('en-PH');
     const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
     const customContribInput = document.getElementById('customTotalContribution');
+    const pointVal = parseFloat(document.getElementById('pointValueInput').value) || 100;
     const sumMembersContribution = members.reduce((sum, m) => sum + getMemberTotalContribution(m), 0);
     
     let effectiveTotalContribution = sumMembersContribution;
@@ -2128,13 +2308,17 @@
       const feePercent = member.feePercent || 0;
       const feeAmount = grossInterest * (feePercent / 100);
       const netInterest = grossInterest - feeAmount;
-      const totalBalance = memberTotalContrib + netInterest;
+
+      const referralPts = member.referralPoints || 0;
+      const referralVal = referralPts * pointVal;
+      const totalBalance = memberTotalContrib + netInterest + referralVal;
 
       rowsHTML += `
         <tr>
           <td style="border:1px solid #ccc; padding:6px;"><b>${member.name}</b></td>
           <td style="border:1px solid #ccc; padding:6px;">${member.address || '-'} (Age: ${calculateAge(member.birthdate)})</td>
           <td style="border:1px solid #ccc; padding:6px; text-align:right;">${formatCurrency(memberTotalContrib)}</td>
+          <td style="border:1px solid #ccc; padding:6px; text-align:center;">${referralPts} pts (${formatCurrency(referralVal)})</td>
           <td style="border:1px solid #ccc; padding:6px; text-align:center;">${(sharePercentage * 100).toFixed(2)}%</td>
           <td style="border:1px solid #ccc; padding:6px; text-align:center;">${feePercent}%</td>
           <td style="border:1px solid #ccc; padding:6px; text-align:right;">${formatCurrency(netInterest)}</td>
@@ -2162,6 +2346,7 @@
               <th>Member Name</th>
               <th>Address / Age</th>
               <th style="text-align:right;">Contribution</th>
+              <th style="text-align:center;">Referral Points</th>
               <th style="text-align:center;">Share (%)</th>
               <th style="text-align:center;">Fee (%)</th>
               <th style="text-align:right;">Net Interest</th>
