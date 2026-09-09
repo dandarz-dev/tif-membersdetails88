@@ -631,7 +631,7 @@
       100% { opacity: 0.3; }
     }
 
-    /* NETWORK TREE STYLES (WALANG BOX OUTLINE) */
+    /* NETWORK TREE STYLES */
     .network-tree-wrapper {
       padding: 15px;
       overflow-x: auto;
@@ -914,7 +914,6 @@
         <h2 style="color: var(--success-color); margin-bottom:0; font-size: 1.3rem;">New Net Balance: ₱<span id="mTotalBalance">0.00</span></h2>
       </div>
 
-      <!-- DOWNLOAD BUTTON SA IBABA NG MEMBERS PORTAL -->
       <div style="margin-top: 20px; text-align: center;">
         <button class="btn btn-download-portal btn-block" onclick="downloadMemberPortalDetails()">
           <i class="fa-solid fa-file-arrow-down"></i> DOWNLOAD FILES as PDF
@@ -954,7 +953,7 @@
         <button class="btn" style="background-color: #16a34a;" onclick="saveAnnouncement()"><i class="fa-solid fa-floppy-disk"></i> Save Announcement</button>
       </div>
 
-      <!-- 1. ADD NEW MEMBER FORM WITH REFERRAL SELECTION -->
+      <!-- 1. ADD NEW MEMBER FORM -->
       <div class="card-box">
         <h2 class="section-title"><i class="fa-solid fa-user-plus"></i> 1. Add New Member</h2>
         <div class="grid-7">
@@ -970,7 +969,6 @@
             <label for="memberFee">Fee (%)</label>
             <input type="number" id="memberFee" placeholder="0" min="0" max="100" value="0" step="any">
           </div>
-          <!-- REFERRED BY SELECTION -->
           <div class="form-group">
             <label for="referrerSelect">Referred By (Level 1 Member)</label>
             <select id="referrerSelect">
@@ -1022,7 +1020,7 @@
 
         <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
 
-        <!-- 3. FUND SETTINGS & EDITABLE 3-LEVEL POINT CONVERSION -->
+        <!-- 3. FUND SETTINGS -->
         <h2 class="section-title"><i class="fa-solid fa-coins"></i> 3. Fund Settings & Up to 3-Level Reward Points System</h2>
         
         <div class="grid-3" style="margin-bottom: 12px;">
@@ -1040,7 +1038,6 @@
           </div>
         </div>
 
-        <!-- EDITABLE 3-LEVEL POINTS REWARD CONFIGURATION -->
         <div style="background: #f1f5f9; border: 1px dashed #cbd5e1; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
           <h4 style="margin: 0 0 10px 0; font-size: 0.9rem; color: #1e40af;"><i class="fa-solid fa-sitemap"></i> Referral & Override Level Rewards Setup (Points per Referral)</h4>
           <div class="grid-3">
@@ -1072,7 +1069,6 @@
         <h2 class="section-title" style="margin: 0;"><i class="fa-solid fa-chart-pie"></i> Distribution Summary</h2>
         <div style="display: flex; gap: 10px;">
           <button class="btn btn-print" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
-          <button class="btn btn-word" onclick="exportToWord()"><i class="fa-solid fa-file-word"></i> Word</button>
         </div>
       </div>
 
@@ -1424,7 +1420,7 @@
       confirmButtonText: 'Yes, Proceed'
     }).then((result) => {
       if (result.isConfirmed) {
-        // HINGIN ANG PASSWORD NG MEMBER BAGO MG OK
+        // HINGIN ANG PASSWORD NG MEMBER BAGO ITULOY
         Swal.fire({
           title: 'Enter Password to Confirm',
           text: `Please enter your password to confirm cash out.`,
@@ -1450,6 +1446,7 @@
           }
         }).then((pwdResult) => {
           if (pwdResult.isConfirmed) {
+            // KAPAG TAMA ANG PASSWORD: DITO LAMANG MAG-SE-SET NG TRUE ANG CASHOUT REQUESTED
             member.cashoutRequested = true;
             saveMembersToLocal();
 
@@ -1467,7 +1464,7 @@
     });
   }
 
-  // ADMIN PAY ACTION FUNCTION (WITH NETWORK TREE RESET IF BALANCE REACHES 0)
+  // ADMIN PAY ACTION FUNCTION
   function adminPayBonus(memberId) {
     const member = members.find(m => m.id === memberId);
     if (!member) return;
@@ -1487,7 +1484,6 @@
         member.referralPoints = 0;
         member.cashoutRequested = false;
 
-        // PAG NAGIN ZERO ANG BALANCE NG REFERRAL OVERRIDES: AUTO RESET NETWORK TREE
         let resetCount = 0;
         members.forEach(m => {
           if (m.referredBy === memberId) {
@@ -1852,7 +1848,7 @@ Thank you for investing with Tyler's Integrated Farm!
     }
   }
 
-  // RENDER NETWORK TREE FOR MEMBERS PORTAL (WITHOUT BOX BORDER)
+  // RENDER NETWORK TREE FOR MEMBERS PORTAL
   function renderNetworkTree(rootMember) {
     const container = document.getElementById('networkTreeContainer');
     if (!container) return;
@@ -1934,7 +1930,6 @@ Thank you for investing with Tyler's Integrated Farm!
     document.getElementById('mNetInterest').innerText = netInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('mFee').innerText = feeAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
-    // OVERRIDE SUMMARY CARD UPDATES & CASH OUT BUTTON
     document.getElementById('mOverridePointsText').innerText = `${referralPts} pts`;
     document.getElementById('mPointConversionVal').innerText = pointVal.toLocaleString('en-US', {minimumFractionDigits:2});
     document.getElementById('mOverrideBonusValue').innerText = formatCurrency(referralValue);
@@ -2164,7 +2159,6 @@ Thank you for investing with Tyler's Integrated Farm!
     if (member) {
       member.referralPoints = parsedPoints < 0 ? 0 : parsedPoints;
 
-      // PAG NAGIN ZERO ANG BALANCE NG REFERRAL OVERRIDES: AUTO RESET NETWORK TREE
       if (member.referralPoints === 0) {
         members.forEach(m => {
           if (m.referredBy === id) {
@@ -2184,6 +2178,7 @@ Thank you for investing with Tyler's Integrated Farm!
     }
   }
 
+  // RENDER ADMIN TABLE (NAG-UPDATE ANG CONDITIONAL DISPLAY NG PAY BUTTON)
   function renderTable() {
     const tbody = document.getElementById('memberTableBody');
     if (!tbody) return;
@@ -2223,14 +2218,16 @@ Thank you for investing with Tyler's Integrated Farm!
 
       const ageVal = calculateAge(member.birthdate);
 
-      // ADMIN PAY BUTTON IF CASHOUT REQUESTED OR OVERRIDE VALUE >= 500
+      // DEFAULT EDIT AT DELETE BUTTONS
       let adminActionBtn = `
         <button class="btn btn-edit" onclick="editMemberDetails('${member.id}')" title="Edit Profile"><i class="fa-solid fa-user-pen"></i></button>
         <button class="btn btn-outline-danger" onclick="confirmDelete('${member.id}', '${member.name}')" title="Delete Member"><i class="fa-solid fa-trash"></i></button>
       `;
 
       let payNoteBadge = "";
-      if (member.cashoutRequested || referralVal >= 500) {
+      
+      // ANG PAY NOTIFICATION AT BUTTON AY LALABAS LAMANG PAG KUMPLETO ANG CASHOUT REQUEST AT PASSWORD NG MEMBER
+      if (member.cashoutRequested) {
         payNoteBadge = `<span class="badge-pay-note"><i class="fa-solid fa-bell"></i> PAY</span>`;
         adminActionBtn = `
           <button class="btn btn-admin-pay" onclick="adminPayBonus('${member.id}')" title="Pay Cash Out"><i class="fa-solid fa-hand-holding-dollar"></i> PAY</button>
@@ -2322,7 +2319,7 @@ Thank you for investing with Tyler's Integrated Farm!
     });
   }
 
-  // ADD NEW MEMBER WITH AUTOMATIC MULTI-LEVEL REWARD POINTS
+  // ADD NEW MEMBER
   async function addMember() {
     const name = document.getElementById('memberName').value.trim();
     const contrib = parseFloat(document.getElementById('memberContribInput').value) || 0;
@@ -2362,7 +2359,6 @@ Thank you for investing with Tyler's Integrated Farm!
       history: contrib > 0 ? [{ date: todayStr, amount: contrib, note: 'Initial Contribution' }] : []
     };
 
-    // MULTI-LEVEL REWARD POINTS AUTOMATIC DISTRIBUTE TO REFERRERS
     const l1Pts = parseFloat(document.getElementById('level1Points').value) || 0;
     const l2Pts = parseFloat(document.getElementById('level2Points').value) || 0;
     const l3Pts = parseFloat(document.getElementById('level3Points').value) || 0;
@@ -2617,18 +2613,19 @@ Thank you for investing with Tyler's Integrated Farm!
     };
 
     const backupData = {
+      version: "2.0",
+      exportDate: new Date().toISOString(),
       settings: settings,
-      members: members,
-      exportDate: new Date().toISOString()
+      members: members
     };
 
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-    const dlAnchor = document.createElement('a');
-    dlAnchor.setAttribute("href", dataStr);
-    dlAnchor.setAttribute("download", `TIF_Fund_Backup_${new Date().toISOString().split('T')[0]}.json`);
-    document.body.appendChild(dlAnchor);
-    dlAnchor.click();
-    dlAnchor.remove();
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `TIF_Fund_Backup_${new Date().toISOString().split('T')[0]}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
   }
 
   function triggerRestore() {
@@ -2642,92 +2639,64 @@ Thank you for investing with Tyler's Integrated Farm!
     const reader = new FileReader();
     reader.onload = async function(e) {
       try {
-        const data = JSON.parse(e.target.result);
-        if (data.settings) {
-          if (data.settings.overallInterest !== undefined) document.getElementById('overallInterest').value = data.settings.overallInterest;
-          if (data.settings.customTotalContribution !== undefined) document.getElementById('customTotalContribution').value = data.settings.customTotalContribution;
-          if (data.settings.pointValue !== undefined) document.getElementById('pointValueInput').value = data.settings.pointValue;
-          if (data.settings.level1Points !== undefined) document.getElementById('level1Points').value = data.settings.level1Points;
-          if (data.settings.level2Points !== undefined) document.getElementById('level2Points').value = data.settings.level2Points;
-          if (data.settings.level3Points !== undefined) document.getElementById('level3Points').value = data.settings.level3Points;
-          if (data.settings.adminPassword) adminPassword = data.settings.adminPassword;
-          if (data.settings.announcement) {
-            currentAnnouncement = data.settings.announcement;
-            document.getElementById('announcementText').value = currentAnnouncement;
-          }
-          await saveFundSettings();
+        const importedData = JSON.parse(e.target.result);
+
+        if (!importedData.members || !Array.isArray(importedData.members)) {
+          throw new Error("Invalid backup file format.");
         }
 
-        if (data.members && Array.isArray(data.members)) {
-          members = data.members;
+        const confirmRestore = await Swal.fire({
+          title: 'Restore Data?',
+          text: 'This will overwrite existing member records and settings. Are you sure?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d97706',
+          confirmButtonText: 'Yes, Restore Everything'
+        });
+
+        if (confirmRestore.isConfirmed) {
+          members = importedData.members;
           saveMembersToLocal();
 
-          if (firebaseEnabled && db) {
-            for (let m of members) {
-              await db.collection('members').doc(m.id).set(m);
+          if (importedData.settings) {
+            const s = importedData.settings;
+            if (s.overallInterest !== undefined) document.getElementById('overallInterest').value = s.overallInterest;
+            if (s.customTotalContribution !== undefined) document.getElementById('customTotalContribution').value = s.customTotalContribution;
+            if (s.pointValue !== undefined) document.getElementById('pointValueInput').value = s.pointValue;
+            if (s.level1Points !== undefined) document.getElementById('level1Points').value = s.level1Points;
+            if (s.level2Points !== undefined) document.getElementById('level2Points').value = s.level2Points;
+            if (s.level3Points !== undefined) document.getElementById('level3Points').value = s.level3Points;
+            if (s.adminPassword) adminPassword = s.adminPassword;
+            if (s.announcement) {
+              currentAnnouncement = s.announcement;
+              document.getElementById('announcementText').value = currentAnnouncement;
             }
+            await saveFundSettings();
           }
+
+          if (firebaseEnabled && db) {
+            const batch = db.batch();
+            members.forEach(m => {
+              const docRef = db.collection('members').doc(m.id);
+              batch.set(docRef, m);
+            });
+            await batch.commit();
+          }
+
+          populateTopupMemberDropdown();
+          renderTable();
+          renderCredentialsTable();
+
+          Swal.fire('Restored!', 'Data has been successfully restored from backup file.', 'success');
         }
-
-        populateTopupMemberDropdown();
-        renderTable();
-        renderCredentialsTable();
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Data Restored!',
-          text: 'Backup data successfully loaded and synced.',
-          confirmButtonColor: '#16a34a'
-        });
       } catch (err) {
-        Swal.fire('Error', 'Invalid backup JSON file!', 'error');
+        Swal.fire('Restore Failed', 'Unable to parse backup file: ' + err.message, 'error');
       }
     };
     reader.readAsText(file);
   }
 
-  // EXPORT TO WORD
-  function exportToWord() {
-    const tableHTML = document.getElementById('reportTable').outerHTML;
-    const totalPool = document.getElementById('totalContributionDisplay').innerText;
-    const totalInt = document.getElementById('totalInterestDisplay').innerText;
-    const totalFees = document.getElementById('totalFeesDisplay').innerText;
-    const totalRef = document.getElementById('totalReferralValDisplay').innerText;
-    const totalFund = document.getElementById('totalFundDisplay').innerText;
-
-    const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-    <head><title>TIF Fund Distribution Report</title>
-    <style>
-      body { font-family: Arial, sans-serif; }
-      table { border-collapse: collapse; width: 100%; }
-      th, td { border: 1px solid #000; padding: 6px; font-size: 11px; }
-      th { background-color: #f2f2f2; }
-    </style>
-    </head><body>
-    <h2>TYLER'S INTEGRATED FARM INVESTMENT FUND</h2>
-    <h3>Distribution & Summary Report - ${new Date().toLocaleDateString()}</h3>
-    <p><strong>Total Pool Contribution:</strong> ₱${totalPool}</p>
-    <p><strong>Gross Distributed Interest:</strong> ₱${totalInt}</p>
-    <p><strong>Total Processing Fees:</strong> ₱${totalFees}</p>
-    <p><strong>Total Referral Value:</strong> ₱${totalRef}</p>
-    <p><strong>Net Combined Fund:</strong> ₱${totalFund}</p>
-    <hr>
-    ${tableHTML}
-    </body></html>`;
-
-    const blob = new Blob(['\ufeff', header], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `TIF_Fund_Report_${new Date().toISOString().split('T')[0]}.doc`;
-    document.body.appendChild(a);
-    a.click();
-    a.document.body.removeChild(a);
-  }
-
   // CALCULATOR LOGIC
-  let calcExpr = "";
-
   function toggleCalculator() {
     const calc = document.getElementById('floatingCalc');
     calc.classList.toggle('active');
@@ -2735,51 +2704,43 @@ Thank you for investing with Tyler's Integrated Farm!
 
   function appendCalc(val) {
     const display = document.getElementById('calcDisplay');
-    if (display.value === "0" && !isNaN(val)) {
-      calcExpr = val;
+    if (display.value === '0' && val !== '.') {
+      display.value = val;
     } else {
-      calcExpr += val;
+      display.value += val;
     }
-    display.value = calcExpr;
   }
 
   function clearCalc() {
-    calcExpr = "";
-    document.getElementById('calcDisplay').value = "0";
-    document.getElementById('calcHistory').innerText = "";
-  }
-
-  function calcFunc(func) {
-    const display = document.getElementById('calcDisplay');
-    let curr = parseFloat(display.value) || 0;
-
-    if (func === 'sqrt') {
-      curr = Math.sqrt(curr);
-    } else if (func === 'sqr') {
-      curr = curr * curr;
-    } else if (func === 'pm') {
-      curr = -curr;
-    }
-
-    calcExpr = curr.toString();
-    display.value = calcExpr;
+    document.getElementById('calcDisplay').value = '0';
+    document.getElementById('calcHistory').innerText = '';
   }
 
   function calculateCalc() {
     const display = document.getElementById('calcDisplay');
     const history = document.getElementById('calcHistory');
-
     try {
-      history.innerText = calcExpr + " =";
-      const res = eval(calcExpr.replace(/%/g, '/100'));
-      display.value = res;
-      calcExpr = res.toString();
+      let expression = display.value.replace(/×/g, '*').replace(/÷/g, '/');
+      history.innerText = expression + ' =';
+      const result = eval(expression);
+      display.value = result;
     } catch (e) {
-      display.value = "Error";
-      calcExpr = "";
+      display.value = 'Error';
+    }
+  }
+
+  function calcFunc(type) {
+    const display = document.getElementById('calcDisplay');
+    let val = parseFloat(display.value) || 0;
+
+    if (type === 'sqrt') {
+      display.value = Math.sqrt(val);
+    } else if (type === 'sqr') {
+      display.value = val * val;
+    } else if (type === 'pm') {
+      display.value = val * -1;
     }
   }
 </script>
-
 </body>
 </html>
