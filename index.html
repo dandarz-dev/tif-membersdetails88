@@ -587,6 +587,79 @@
       100% { opacity: 0.3; }
     }
 
+    /* NETWORK TREE STYLES */
+    .network-tree-wrapper {
+      padding: 15px;
+      overflow-x: auto;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+    .tree-node-card {
+      background: #ffffff;
+      border: 2px solid #3b82f6;
+      border-radius: 8px;
+      padding: 10px 14px;
+      min-width: 180px;
+      display: inline-block;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+    .tree-node-card.root {
+      border-color: #1e40af;
+      background: #eff6ff;
+    }
+    .tree-node-card.level-1 { border-color: #16a34a; }
+    .tree-node-card.level-2 { border-color: #d97706; }
+    .tree-node-card.level-3 { border-color: #8b5cf6; }
+
+    .network-tree-ul {
+      padding-top: 20px; 
+      position: relative;
+      transition: all 0.5s;
+      display: flex;
+      justify-content: center;
+      margin: 0;
+      padding-left: 0;
+      list-style-type: none;
+    }
+    .network-tree-li {
+      float: left; text-align: center;
+      list-style-type: none;
+      position: relative;
+      padding: 20px 5px 0 5px;
+      transition: all 0.5s;
+    }
+    .network-tree-li::before, .network-tree-li::after{
+      content: '';
+      position: absolute; top: 0; right: 50%;
+      border-top: 2px solid #cbd5e1;
+      width: 50%; height: 20px;
+    }
+    .network-tree-li::after{
+      right: auto; left: 50%;
+      border-left: 2px solid #cbd5e1;
+    }
+    .network-tree-li:only-child::after, .network-tree-li:only-child::before {
+      display: none;
+    }
+    .network-tree-li:only-child{ padding-top: 0;}
+    .network-tree-li:first-child::before, .network-tree-li:last-child::after{
+      border: 0 none;
+    }
+    .network-tree-li:last-child::before{
+      border-right: 2px solid #cbd5e1;
+      border-radius: 0 5px 0 0;
+    }
+    .network-tree-li:first-child::after{
+      border-radius: 5px 0 0 0;
+    }
+    .network-tree-ul ul::before{
+      content: '';
+      position: absolute; top: 0; left: 50%;
+      border-left: 2px solid #cbd5e1;
+      width: 0; height: 20px;
+    }
+
     @media print {
       body { background: #ffffff !important; color: #000000 !important; padding: 0 !important; }
       .container { box-shadow: none !important; border: none !important; max-width: 100% !important; width: 100% !important; }
@@ -674,9 +747,9 @@
           <div class="label">Your Total Contribution</div>
           <div class="value">₱<span id="mContribution">0.00</span></div>
         </div>
-        <!-- REFERRAL POINTS INDICATOR SA MEMBER DASHBOARD -->
+        <!-- OVERRIDE & REFERRAL POINTS INDICATOR -->
         <div class="dash-card orange">
-          <div class="label">Referral Points</div>
+          <div class="label">Override & Referral Points</div>
           <div class="value"><span id="mReferralPoints">0</span> pts (<span id="mReferralValue">₱0.00</span>)</div>
         </div>
         <div class="dash-card purple">
@@ -690,6 +763,34 @@
         <div class="dash-card red">
           <div class="label">Fee Deducted</div>
           <div class="value">₱<span id="mFee">0.00</span></div>
+        </div>
+      </div>
+
+      <!-- OVERRIDE POINTS & REFERRAL NETWORK SUMMARY BOX -->
+      <div class="card-box" style="background: #fffbe3; border-color: #fde047;">
+        <h3 class="section-title" style="color: #a16207;"><i class="fa-solid fa-award"></i> Override Points & Referral Summary</h3>
+        <div class="grid-3">
+          <div>
+            <p style="margin: 4px 0; font-size: 0.9rem;"><strong>Total Override Points:</strong> <span id="mOverridePointsText" style="font-weight:700; color:#d97706;">0 pts</span></p>
+            <p style="margin: 4px 0; font-size: 0.85rem; color: #64748b;">Earned from network downline performance.</p>
+          </div>
+          <div>
+            <p style="margin: 4px 0; font-size: 0.9rem;"><strong>Point Value Conversion:</strong> ₱<span id="mPointConversionVal">100.00</span> / pt</p>
+            <p style="margin: 4px 0; font-size: 0.85rem; color: #64748b;">Standard rate set by admin.</p>
+          </div>
+          <div>
+            <p style="margin: 4px 0; font-size: 0.9rem;"><strong>Override Bonus Value:</strong> <span id="mOverrideBonusValue" style="font-weight:700; color:#16a34a;">₱0.00</span></p>
+            <p style="margin: 4px 0; font-size: 0.85rem; color: #64748b;">Directly added to your total balance.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- NETWORK TREE SECTION UNDER MEMBERS PORTAL -->
+      <div class="card-box">
+        <h3 class="section-title"><i class="fa-solid fa-sitemap"></i> Your Referral Network Tree</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Visual hierarchy of your direct (Level 1) and indirect (Level 2 & Level 3) downlines.</p>
+        <div class="network-tree-wrapper">
+          <div id="networkTreeContainer" style="text-align: center;"></div>
         </div>
       </div>
 
@@ -739,7 +840,7 @@
         <p style="font-size: 0.9rem;"><strong>Total Pool Contribution:</strong> ₱<span id="mPoolContribution">0.00</span></p>
         <p style="font-size: 0.9rem;"><strong>Total Interest Distributed:</strong> ₱<span id="mPoolInterest">0.00</span></p>
         <p style="font-size: 0.9rem;"><strong>Gross Interest Earned:</strong> ₱<span id="mGrossInterest">0.00</span></p>
-        <p style="font-size: 0.9rem; color: #d97706;"><strong>Referral Reward Value:</strong> <span id="mReferralRewardDetail">₱0.00</span></p>
+        <p style="font-size: 0.9rem; color: #d97706;"><strong>Referral / Override Value:</strong> <span id="mReferralRewardDetail">₱0.00</span></p>
         <hr>
         <h2 style="color: var(--success-color); margin-bottom:0; font-size: 1.3rem;">New Net Balance: ₱<span id="mTotalBalance">0.00</span></h2>
       </div>
@@ -747,7 +848,7 @@
       <!-- DOWNLOAD BUTTON SA IBABA NG MEMBERS PORTAL -->
       <div style="margin-top: 20px; text-align: center;">
         <button class="btn btn-download-portal btn-block" onclick="downloadMemberPortalDetails()">
-          <i class="fa-solid fa-file-arrow-down"></i> DOWNLOAD COMPLETE PORTAL DETAILS
+          <i class="fa-solid fa-file-arrow-down"></i> DOWNLOAD FILES as PDF
         </button>
       </div>
     </div>
@@ -865,14 +966,14 @@
             <input type="number" id="customTotalContribution" placeholder="Auto-calculated" min="0" step="any" oninput="renderTable()">
           </div>
           <div class="form-group">
-            <label for="pointValueInput">1 Referral Point Value (₱)</label>
+            <label for="pointValueInput">1 Referral / Override Point Value (₱)</label>
             <input type="number" id="pointValueInput" value="100" min="0" step="any" oninput="renderTable()">
           </div>
         </div>
 
         <!-- EDITABLE 3-LEVEL POINTS REWARD CONFIGURATION -->
         <div style="background: #f1f5f9; border: 1px dashed #cbd5e1; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-          <h4 style="margin: 0 0 10px 0; font-size: 0.9rem; color: #1e40af;"><i class="fa-solid fa-sitemap"></i> Referral Level Rewards Setup (Points per Referral)</h4>
+          <h4 style="margin: 0 0 10px 0; font-size: 0.9rem; color: #1e40af;"><i class="fa-solid fa-sitemap"></i> Referral & Override Level Rewards Setup (Points per Referral)</h4>
           <div class="grid-3">
             <div class="form-group" style="margin-bottom: 0;">
               <label for="level1Points">Level 1 (Direct Referral Points)</label>
@@ -942,7 +1043,7 @@
               <th>Member Profile</th>
               <th>Address / Age</th>
               <th class="text-right">Contribution</th>
-              <th class="text-center">Referral Points</th>
+              <th class="text-center">Override Points</th>
               <th class="text-center">Share (%)</th>
               <th class="text-center">Fee Deduct (%)</th>
               <th class="text-right">Net Credited Interest</th>
@@ -1263,7 +1364,6 @@
     const member = currentLoggedInMember;
     const dateStr = new Date().toISOString().split('T')[0];
     
-    // Kunin ang mga datos sa portal
     const totalContrib = document.getElementById('mContribution').innerText;
     const referralPts = document.getElementById('mReferralPoints').innerText;
     const referralVal = document.getElementById('mReferralValue').innerText;
@@ -1300,7 +1400,7 @@ Username:      ${member.username || 'N/A'}
 INVESTMENT SUMMARY
 -----------------------------------------------------
 Total Personal Contribution: ₱${totalContrib}
-Referral Points:             ${referralPts} pts (${referralVal})
+Override / Referral Points:  ${referralPts} pts (${referralVal})
 Fund Share Percentage:       ${share}%
 Net Credited Interest:       ₱${netInterest}
 Fee Deducted:                ₱${fee}
@@ -1565,6 +1665,55 @@ Thank you for investing with Tyler's Integrated Farm!
     }
   }
 
+  // RENDER NETWORK TREE FOR MEMBERS PORTAL
+  function renderNetworkTree(rootMember) {
+    const container = document.getElementById('networkTreeContainer');
+    if (!container) return;
+
+    function buildTreeHTML(memberId, currentLevel) {
+      const downlines = members.filter(m => m.referredBy === memberId);
+      if (downlines.length === 0) return '';
+
+      let html = '<ul class="network-tree-ul">';
+      downlines.forEach(child => {
+        const childContrib = getMemberTotalContribution(child);
+        const nextLevel = currentLevel + 1;
+        const levelClass = nextLevel === 1 ? 'level-1' : (nextLevel === 2 ? 'level-2' : 'level-3');
+
+        html += `
+          <li class="network-tree-li">
+            <div class="tree-node-card ${levelClass}">
+              <div style="font-weight:700; font-size:0.85rem;">${child.name}</div>
+              <div style="font-size:0.75rem; color:#64748b;">L${nextLevel} Downline</div>
+              <div style="font-size:0.75rem; font-weight:600; color:#16a34a;">₱${childContrib.toLocaleString('en-US', {minimumFractionDigits:2})}</div>
+            </div>
+            ${buildTreeHTML(child.id, nextLevel)}
+          </li>
+        `;
+      });
+      html += '</ul>';
+      return html;
+    }
+
+    const rootContrib = getMemberTotalContribution(rootMember);
+    const subTree = buildTreeHTML(rootMember.id, 0);
+
+    let treeHTML = `
+      <ul class="network-tree-ul">
+        <li class="network-tree-li">
+          <div class="tree-node-card root">
+            <div style="font-weight:700; font-size:0.9rem; color:#1e40af;">${rootMember.name} (YOU)</div>
+            <div style="font-size:0.75rem; color:#64748b;">Team Leader</div>
+            <div style="font-size:0.8rem; font-weight:700; color:#16a34a;">₱${rootContrib.toLocaleString('en-US', {minimumFractionDigits:2})}</div>
+          </div>
+          ${subTree || '<p style="font-size:0.8rem; color:#94a3b8; margin-top:10px;">No downlines/referrals yet.</p>'}
+        </li>
+      </ul>
+    `;
+
+    container.innerHTML = treeHTML;
+  }
+
   function renderMemberDashboard(member) {
     const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
     const customContrib = document.getElementById('customTotalContribution').value;
@@ -1596,6 +1745,11 @@ Thank you for investing with Tyler's Integrated Farm!
     document.getElementById('mNetInterest').innerText = netInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('mFee').innerText = feeAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
+    // OVERRIDE SUMMARY CARD UPDATES
+    document.getElementById('mOverridePointsText').innerText = `${referralPts} pts`;
+    document.getElementById('mPointConversionVal').innerText = pointVal.toLocaleString('en-US', {minimumFractionDigits:2});
+    document.getElementById('mOverrideBonusValue').innerText = formatCurrency(referralValue);
+
     document.getElementById('mPoolContribution').innerText = totalPoolContribution.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('mPoolInterest').innerText = overallInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('mGrossInterest').innerText = grossInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -1620,6 +1774,7 @@ Thank you for investing with Tyler's Integrated Farm!
     }
 
     renderMemberCharts(member);
+    renderNetworkTree(member);
   }
 
   function renderAdminCharts() {
@@ -2114,7 +2269,7 @@ Thank you for investing with Tyler's Integrated Farm!
         <div style="text-align:left;">
           <label style="font-weight:600; display:block; margin-bottom:4px;">Full Name:</label>
           <input id="swalEditName" class="swal2-input" value="${member.name}" style="width:100%; margin:0 0 10px 0;">
-          <label style="font-weight:600; display:block; margin-bottom:4px;">Referral Points:</label>
+          <label style="font-weight:600; display:block; margin-bottom:4px;">Override / Referral Points:</label>
           <input id="swalEditPoints" type="number" step="any" class="swal2-input" value="${member.referralPoints || 0}" style="width:100%; margin:0 0 10px 0;">
           <label style="font-weight:600; display:block; margin-bottom:4px;">Birth Date:</label>
           <input id="swalEditBirth" type="date" class="swal2-input" value="${member.birthdate || ''}" style="width:100%; margin:0 0 10px 0;">
@@ -2416,16 +2571,17 @@ Thank you for investing with Tyler's Integrated Farm!
 
   function clearCalc() {
     calcExpr = "0";
-    document.getElementById('calcHistory').innerText = '';
+    document.getElementById('calcHistory').innerText = "";
     updateCalcScreen();
   }
 
   function calcFunc(fn) {
     try {
-      let currentVal = eval(calcExpr);
-      if (fn === 'sqrt') calcExpr = Math.sqrt(currentVal).toString();
-      if (fn === 'sqr') calcExpr = Math.pow(currentVal, 2).toString();
-      if (fn === 'pm') calcExpr = (currentVal * -1).toString();
+      let val = eval(calcExpr);
+      if (fn === 'sqrt') val = Math.sqrt(val);
+      if (fn === 'sqr') val = Math.pow(val, 2);
+      if (fn === 'pm') val = val * -1;
+      calcExpr = String(val);
       updateCalcScreen();
     } catch (e) {
       document.getElementById('calcDisplay').value = "Error";
@@ -2435,33 +2591,15 @@ Thank you for investing with Tyler's Integrated Farm!
 
   function calculateCalc() {
     try {
-      document.getElementById('calcHistory').innerText = calcExpr + ' =';
-      const result = eval(calcExpr.replace(/%/g, '/100'));
-      calcExpr = Number(result.toFixed(6)).toString();
+      document.getElementById('calcHistory').innerText = calcExpr + " =";
+      let result = eval(calcExpr.replace(/%/g, '/100'));
+      calcExpr = String(result);
       updateCalcScreen();
     } catch (e) {
       document.getElementById('calcDisplay').value = "Error";
       calcExpr = "0";
     }
   }
-
-  function exportToWord() {
-    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
-      "xmlns:w='urn:schemas-microsoft-com:office:word' "+
-      "xmlns='http://www.w3.org/TR/REC-html40'>"+
-      "<head><meta charset='utf-8'><title>Export Word</title></head><body>";
-    const footer = "</body></html>";
-    const sourceHTML = header + document.getElementById('adminDashboard').innerHTML + footer;
-    
-    const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
-    const fileDownload = document.createElement("a");
-    document.body.appendChild(fileDownload);
-    fileDownload.href = source;
-    fileDownload.download = 'TIF_Fund_Distribution_Report.doc';
-    fileDownload.click();
-    document.body.removeChild(fileDownload);
-  }
 </script>
-
 </body>
 </html>
