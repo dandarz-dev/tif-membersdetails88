@@ -297,6 +297,18 @@
       background-color: #0046b3;
     }
 
+    .btn-download-portal {
+      background-color: #16a34a;
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 14px 20px;
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+    }
+    .btn-download-portal:hover {
+      background-color: #15803d;
+    }
+
     .btn-print { background-color: #1e3a8a; color: #fff; }
     .btn-word { background-color: #2b579a; color: #fff; }
 
@@ -730,6 +742,13 @@
         <p style="font-size: 0.9rem; color: #d97706;"><strong>Referral Reward Value:</strong> <span id="mReferralRewardDetail">₱0.00</span></p>
         <hr>
         <h2 style="color: var(--success-color); margin-bottom:0; font-size: 1.3rem;">New Net Balance: ₱<span id="mTotalBalance">0.00</span></h2>
+      </div>
+
+      <!-- DOWNLOAD BUTTON SA IBABA NG MEMBERS PORTAL -->
+      <div style="margin-top: 20px; text-align: center;">
+        <button class="btn btn-download-portal btn-block" onclick="downloadMemberPortalDetails()">
+          <i class="fa-solid fa-file-arrow-down"></i> DOWNLOAD COMPLETE PORTAL DETAILS
+        </button>
       </div>
     </div>
 
@@ -1231,6 +1250,93 @@
       showCloseButton: true,
       confirmButtonText: 'Close',
       confirmButtonColor: '#005ce6'
+    });
+  }
+
+  // DOWNLOAD MEMBER PORTAL DETAILS FUNCTION
+  function downloadMemberPortalDetails() {
+    if (!currentLoggedInMember) {
+      Swal.fire('Error', 'No member logged in.', 'error');
+      return;
+    }
+
+    const member = currentLoggedInMember;
+    const dateStr = new Date().toISOString().split('T')[0];
+    
+    // Kunin ang mga datos sa portal
+    const totalContrib = document.getElementById('mContribution').innerText;
+    const referralPts = document.getElementById('mReferralPoints').innerText;
+    const referralVal = document.getElementById('mReferralValue').innerText;
+    const share = document.getElementById('mShare').innerText;
+    const netInterest = document.getElementById('mNetInterest').innerText;
+    const fee = document.getElementById('mFee').innerText;
+    const poolContrib = document.getElementById('mPoolContribution').innerText;
+    const poolInterest = document.getElementById('mPoolInterest').innerText;
+    const grossInterest = document.getElementById('mGrossInterest').innerText;
+    const netBalance = document.getElementById('mTotalBalance').innerText;
+
+    let historyRowsText = "";
+    if (member.history && member.history.length > 0) {
+      member.history.forEach(h => {
+        historyRowsText += `${h.date} | ${h.note} | ₱${parseFloat(h.amount).toLocaleString('en-US', {minimumFractionDigits:2})}\n`;
+      });
+    } else {
+      historyRowsText = "No contribution history recorded.\n";
+    }
+
+    const fileContent = `=====================================================
+TYLER'S INTEGRATED FARM INVESTMENT FUND
+MEMBER PORTAL STATEMENT OF ACCOUNT
+Date Generated: ${new Date().toLocaleString()}
+=====================================================
+
+MEMBER PROFILE DETAILS
+-----------------------------------------------------
+Full Name:     ${member.name}
+Birth Date:    ${member.birthdate || 'N/A'} (Age: ${calculateAge(member.birthdate)})
+Address:       ${member.address || 'N/A'}
+Username:      ${member.username || 'N/A'}
+
+INVESTMENT SUMMARY
+-----------------------------------------------------
+Total Personal Contribution: ₱${totalContrib}
+Referral Points:             ${referralPts} pts (${referralVal})
+Fund Share Percentage:       ${share}%
+Net Credited Interest:       ₱${netInterest}
+Fee Deducted:                ₱${fee}
+
+FUND BREAKDOWN DETAILS
+-----------------------------------------------------
+Total Pool Contribution:     ₱${poolContrib}
+Total Pool Interest:         ₱${poolInterest}
+Gross Interest Earned:       ₱${grossInterest}
+Referral Reward Detail:      ${document.getElementById('mReferralRewardDetail').innerText}
+
+NET ACCOUNT BALANCE:         ₱${netBalance}
+
+=====================================================
+CONTRIBUTION HISTORY
+=====================================================
+Date       | Type / Note              | Amount
+-----------------------------------------------------
+${historyRowsText}
+=====================================================
+Thank you for investing with Tyler's Integrated Farm!
+`;
+
+    const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8' });
+    const downloadLink = document.createElement('a');
+    downloadLink.href = URL.createObjectURL(blob);
+    downloadLink.download = `TIF_Statement_${member.name.replace(/\s+/g, '_')}_${dateStr}.txt`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Portal Details Downloaded!',
+      text: 'Your statement of account has been downloaded successfully.',
+      confirmButtonColor: '#16a34a'
     });
   }
 
@@ -2269,9 +2375,8 @@
           if (firebaseEnabled && db) {
             const batch = db.batch();
             members.forEach(m => {
-              const docId = m.id || ('mem_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4));
-              m.id = docId;
-              batch.set(db.collection('members').doc(docId), m, { merge: true });
+              const ref = db.collection('members').doc(m.id);
+              batch.set(ref, m);
             });
             await batch.commit();
           }
@@ -2279,130 +2384,84 @@
           populateTopupMemberDropdown();
           renderTable();
           renderCredentialsTable();
-          Swal.fire('Restored!', 'All records have been restored successfully.', 'success');
+          Swal.fire('Restored!', 'Data backup imported successfully.', 'success');
         }
       } catch (err) {
-        Swal.fire('Error', 'Failed to read backup JSON file.', 'error');
+        Swal.fire('Error', 'Invalid JSON backup file format.', 'error');
       }
     };
     reader.readAsText(file);
   }
 
-  function exportToWord() {
-    const dateStr = new Date().toLocaleDateString('en-PH');
-    const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
-    const customContribInput = document.getElementById('customTotalContribution');
-    const pointVal = parseFloat(document.getElementById('pointValueInput').value) || 100;
-    const sumMembersContribution = members.reduce((sum, m) => sum + getMemberTotalContribution(m), 0);
-    
-    let effectiveTotalContribution = sumMembersContribution;
-    if (customContribInput.value !== "" && !isNaN(parseFloat(customContribInput.value))) {
-      effectiveTotalContribution = parseFloat(customContribInput.value);
-    }
+  // FLOATING CALCULATOR LOGIC
+  let calcExpr = "0";
 
-    let rowsHTML = '';
-    members.forEach((member) => {
-      const memberTotalContrib = getMemberTotalContribution(member);
-      const sharePercentage = effectiveTotalContribution > 0 ? (memberTotalContrib / effectiveTotalContribution) : 0;
-      const grossInterest = sharePercentage * overallInterest;
-      const feePercent = member.feePercent || 0;
-      const feeAmount = grossInterest * (feePercent / 100);
-      const netInterest = grossInterest - feeAmount;
-
-      const referralPts = member.referralPoints || 0;
-      const referralVal = referralPts * pointVal;
-      const totalBalance = memberTotalContrib + netInterest + referralVal;
-
-      rowsHTML += `
-        <tr>
-          <td style="border:1px solid #ccc; padding:6px;"><b>${member.name}</b></td>
-          <td style="border:1px solid #ccc; padding:6px;">${member.address || '-'} (Age: ${calculateAge(member.birthdate)})</td>
-          <td style="border:1px solid #ccc; padding:6px; text-align:right;">${formatCurrency(memberTotalContrib)}</td>
-          <td style="border:1px solid #ccc; padding:6px; text-align:center;">${referralPts} pts (${formatCurrency(referralVal)})</td>
-          <td style="border:1px solid #ccc; padding:6px; text-align:center;">${(sharePercentage * 100).toFixed(2)}%</td>
-          <td style="border:1px solid #ccc; padding:6px; text-align:center;">${feePercent}%</td>
-          <td style="border:1px solid #ccc; padding:6px; text-align:right;">${formatCurrency(netInterest)}</td>
-          <td style="border:1px solid #ccc; padding:6px; text-align:right;"><b>${formatCurrency(totalBalance)}</b></td>
-        </tr>
-      `;
-    });
-
-    let docHTML = `
-      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-      <head><meta charset='utf-8'><title>Fund Report</title>
-      <style>
-        body { font-family: Arial, sans-serif; font-size: 10pt; }
-        h1 { color: #1e40af; font-size: 14pt; }
-        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-        th { background-color: #1e40af; color: #ffffff; border: 1px solid #ccc; padding: 6px; text-align: left; }
-      </style>
-      </head>
-      <body>
-        <h1>TYLER'S INTEGRATED FARM INVESTMENT FUND REPORT</h1>
-        <p><b>Date Generated:</b> ${dateStr}</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Member Name</th>
-              <th>Address / Age</th>
-              <th style="text-align:right;">Contribution</th>
-              <th style="text-align:center;">Referral Points</th>
-              <th style="text-align:center;">Share (%)</th>
-              <th style="text-align:center;">Fee (%)</th>
-              <th style="text-align:right;">Net Interest</th>
-              <th style="text-align:right;">New Net Balance</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rowsHTML}
-          </tbody>
-        </table>
-      </body>
-      </html>
-    `;
-
-    const blob = new Blob(['\ufeff' + docHTML], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Fund_Report_${dateStr.replace(/\//g, '-')}.doc`;
-    a.click();
+  function toggleCalculator() {
+    const calc = document.getElementById('floatingCalc');
+    calc.classList.toggle('active');
   }
 
-  /* CALCULATOR FUNCTIONS */
-  function toggleCalculator() {
-    document.getElementById('floatingCalc').classList.toggle('active');
+  function updateCalcScreen() {
+    document.getElementById('calcDisplay').value = calcExpr;
   }
 
   function appendCalc(val) {
-    const display = document.getElementById('calcDisplay');
-    if (display.value === '0' || display.value === 'Error') display.value = val;
-    else display.value += val;
+    if (calcExpr === "0" && val !== '.') {
+      calcExpr = val;
+    } else {
+      calcExpr += val;
+    }
+    updateCalcScreen();
   }
 
   function clearCalc() {
-    document.getElementById('calcDisplay').value = '0';
+    calcExpr = "0";
     document.getElementById('calcHistory').innerText = '';
+    updateCalcScreen();
   }
 
-  function calcFunc(type) {
-    const display = document.getElementById('calcDisplay');
-    let val = parseFloat(display.value);
-    if (isNaN(val)) return;
-    if (type === 'sqrt') display.value = Math.sqrt(val);
-    else if (type === 'sqr') display.value = val * val;
-    else if (type === 'pm') display.value = val * -1;
+  function calcFunc(fn) {
+    try {
+      let currentVal = eval(calcExpr);
+      if (fn === 'sqrt') calcExpr = Math.sqrt(currentVal).toString();
+      if (fn === 'sqr') calcExpr = Math.pow(currentVal, 2).toString();
+      if (fn === 'pm') calcExpr = (currentVal * -1).toString();
+      updateCalcScreen();
+    } catch (e) {
+      document.getElementById('calcDisplay').value = "Error";
+      calcExpr = "0";
+    }
   }
 
   function calculateCalc() {
-    const display = document.getElementById('calcDisplay');
     try {
-      let expr = display.value.replace(/%/g, '/100');
-      display.value = Number(Function('"use strict";return (' + expr + ')')().toFixed(8)).toString();
+      document.getElementById('calcHistory').innerText = calcExpr + ' =';
+      const result = eval(calcExpr.replace(/%/g, '/100'));
+      calcExpr = Number(result.toFixed(6)).toString();
+      updateCalcScreen();
     } catch (e) {
-      display.value = 'Error';
+      document.getElementById('calcDisplay').value = "Error";
+      calcExpr = "0";
     }
   }
+
+  function exportToWord() {
+    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
+      "xmlns:w='urn:schemas-microsoft-com:office:word' "+
+      "xmlns='http://www.w3.org/TR/REC-html40'>"+
+      "<head><meta charset='utf-8'><title>Export Word</title></head><body>";
+    const footer = "</body></html>";
+    const sourceHTML = header + document.getElementById('adminDashboard').innerHTML + footer;
+    
+    const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+    const fileDownload = document.createElement("a");
+    document.body.appendChild(fileDownload);
+    fileDownload.href = source;
+    fileDownload.download = 'TIF_Fund_Distribution_Report.doc';
+    fileDownload.click();
+    document.body.removeChild(fileDownload);
+  }
 </script>
+
 </body>
 </html>
