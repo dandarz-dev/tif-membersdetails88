@@ -1533,7 +1533,7 @@
     listenToFirebaseData();
   });
 
-  // --- EXPORT & IMPORT BACKUP FUNCTIONS (FIXED) ---
+  // --- EXPORT & IMPORT BACKUP FUNCTIONS ---
   function exportDataBackup() {
     const settingsData = {
       overallInterest: parseFloat(document.getElementById('overallInterest').value) || 0,
@@ -1584,11 +1584,9 @@
           throw new Error("Invalid backup file format: missing members array.");
         }
 
-        // Restore members
         members = importedData.members;
         saveMembersToLocal();
 
-        // Restore settings if available
         if (importedData.settings) {
           const s = importedData.settings;
           if (s.overallInterest !== undefined) document.getElementById('overallInterest').value = s.overallInterest;
@@ -1609,7 +1607,6 @@
           }
         }
 
-        // Sync restored members to Firebase if enabled
         if (firebaseEnabled && db) {
           const batch = db.batch();
           members.forEach(m => {
@@ -1639,12 +1636,11 @@
           text: 'May sira o hindi tugma ang napili mong JSON file.'
         });
       } finally {
-        event.target.value = ''; // Reset file input
+        event.target.value = '';
       }
     };
     reader.readAsText(file);
   }
-  // ---------------------------------------------
 
   // EDIT MEMBER DETAILS FUNCTION
   async function editMemberDetails(memberId) {
@@ -1973,6 +1969,18 @@ Thank you for investing with Tyler's Integrated Farm!
       });
       renderTable();
     }
+  }
+
+  function saveAnnouncement() {
+    const ann = document.getElementById('announcementText').value.trim();
+    currentAnnouncement = ann;
+    saveFundSettings();
+    Swal.fire({
+      icon: 'success',
+      title: 'Announcement Saved!',
+      text: 'Popup announcement has been updated successfully.',
+      confirmButtonColor: '#16a34a'
+    });
   }
 
   async function changeAdminPassword() {
@@ -2635,69 +2643,66 @@ Thank you for investing with Tyler's Integrated Farm!
     const role = document.getElementById('memberRoleSelect').value;
     const fee = parseFloat(document.getElementById('memberFee').value) || 0;
     const referrerId = document.getElementById('referrerSelect').value;
-    const points = parseFloat(document.getElementById('memberPointsInput').value) || 0;
+    const initialPoints = parseFloat(document.getElementById('memberPointsInput').value) || 0;
     const birthdate = document.getElementById('memberBirthdate').value;
     const address = document.getElementById('memberAddress').value.trim();
     const username = document.getElementById('newUsername').value.trim();
     const password = document.getElementById('newPassword').value.trim() || 'password123';
-
     const interestRate = parseFloat(document.getElementById('investorInterestRate').value) || 15;
     const loanTerm = parseInt(document.getElementById('investorLoanTerm').value) || 12;
 
     if (!name || !username) {
-      Swal.fire('Warning', 'Please fill in Member Name and Username.', 'warning');
+      Swal.fire('Error', 'Please enter Full Name and Username.', 'error');
       return;
     }
 
     const duplicate = members.find(m => m.username && m.username.toLowerCase() === username.toLowerCase());
     if (duplicate) {
-      Swal.fire('Error', 'Username already exists! Choose another username.', 'error');
+      Swal.fire('Error', 'Username already exists! Choose another one.', 'error');
       return;
     }
 
-    const newMemberObj = {
+    const newMember = {
       name,
       role,
       feePercent: fee,
-      referredBy: referrerId || "",
-      referralPoints: points,
+      referredBy: referrerId || null,
+      referralPoints: initialPoints,
       birthdate,
       address,
       username,
       password,
       interestRate: role === 'investor' ? interestRate : undefined,
       loanTerm: role === 'investor' ? loanTerm : undefined,
-      cashoutRequested: false,
       history: contrib > 0 ? [{ date: new Date().toISOString().split('T')[0], amount: contrib, note: 'Initial Capital / Contribution' }] : []
     };
 
-    // Up to 3-Level Override Points System distribution
-    const l1Pts = parseFloat(document.getElementById('level1Points').value) || 1;
-    const l2Pts = parseFloat(document.getElementById('level2Points').value) || 0.5;
-    const l3Pts = parseFloat(document.getElementById('level3Points').value) || 0.25;
-
     if (referrerId) {
-      const l1Member = members.find(m => m.id === referrerId);
-      if (l1Member) {
-        l1Member.referralPoints = (l1Member.referralPoints || 0) + l1Pts;
+      const l1PointsToAdd = parseFloat(document.getElementById('level1Points').value) || 1;
+      const l2PointsToAdd = parseFloat(document.getElementById('level2Points').value) || 0.5;
+      const l3PointsToAdd = parseFloat(document.getElementById('level3Points').value) || 0.25;
+
+      let l1Ref = members.find(m => m.id === referrerId);
+      if (l1Ref) {
+        l1Ref.referralPoints = (l1Ref.referralPoints || 0) + l1PointsToAdd;
         if (firebaseEnabled && db) {
-          db.collection('members').doc(l1Member.id).update({ referralPoints: l1Member.referralPoints }).catch(err => console.warn(err));
+          db.collection('members').doc(l1Ref.id).update({ referralPoints: l1Ref.referralPoints }).catch(err => console.warn(err));
         }
 
-        if (l1Member.referredBy) {
-          const l2Member = members.find(m => m.id === l1Member.referredBy);
-          if (l2Member) {
-            l2Member.referralPoints = (l2Member.referralPoints || 0) + l2Pts;
+        if (l1Ref.referredBy) {
+          let l2Ref = members.find(m => m.id === l1Ref.referredBy);
+          if (l2Ref) {
+            l2Ref.referralPoints = (l2Ref.referralPoints || 0) + l2PointsToAdd;
             if (firebaseEnabled && db) {
-              db.collection('members').doc(l2Member.id).update({ referralPoints: l2Member.referralPoints }).catch(err => console.warn(err));
+              db.collection('members').doc(l2Ref.id).update({ referralPoints: l2Ref.referralPoints }).catch(err => console.warn(err));
             }
 
-            if (l2Member.referredBy) {
-              const l3Member = members.find(m => m.id === l2Member.referredBy);
-              if (l3Member) {
-                l3Member.referralPoints = (l3Member.referralPoints || 0) + l3Pts;
+            if (l2Ref.referredBy) {
+              let l3Ref = members.find(m => m.id === l2Ref.referredBy);
+              if (l3Ref) {
+                l3Ref.referralPoints = (l3Ref.referralPoints || 0) + l3PointsToAdd;
                 if (firebaseEnabled && db) {
-                  db.collection('members').doc(l3Member.id).update({ referralPoints: l3Member.referralPoints }).catch(err => console.warn(err));
+                  db.collection('members').doc(l3Ref.id).update({ referralPoints: l3Ref.referralPoints }).catch(err => console.warn(err));
                 }
               }
             }
@@ -2708,21 +2713,22 @@ Thank you for investing with Tyler's Integrated Farm!
 
     if (firebaseEnabled && db) {
       try {
-        const docRef = await db.collection('members').add(newMemberObj);
-        newMemberObj.id = docRef.id;
+        const docRef = await db.collection('members').add(newMember);
+        newMember.id = docRef.id;
       } catch (err) {
         console.warn("Firestore add member error:", err);
-        newMemberObj.id = 'local_' + Date.now();
+        newMember.id = 'local_' + Date.now();
       }
     } else {
-      newMemberObj.id = 'local_' + Date.now();
+      newMember.id = 'local_' + Date.now();
     }
 
-    members.push(newMemberObj);
+    members.push(newMember);
     saveMembersToLocal();
 
     document.getElementById('memberName').value = '';
     document.getElementById('memberContribInput').value = '';
+    document.getElementById('memberFee').value = '0';
     document.getElementById('memberPointsInput').value = '0';
     document.getElementById('memberBirthdate').value = '';
     document.getElementById('memberAddress').value = '';
@@ -2735,19 +2741,19 @@ Thank you for investing with Tyler's Integrated Farm!
 
     Swal.fire({
       icon: 'success',
-      title: 'Member Added!',
-      text: `${name} has been successfully added to Tyler's Integrated Farm.`,
-      confirmButtonColor: '#1e40af'
+      title: 'User Added!',
+      text: `${name} has been successfully added as a ${role}.`,
+      confirmButtonColor: '#16a34a'
     });
   }
 
-  async function addContributionTopUp() {
+  function addContributionTopUp() {
     const memberId = document.getElementById('topupMemberSelect').value;
     const amount = parseFloat(document.getElementById('topupAmount').value) || 0;
-    const date = document.getElementById('topupDate').value;
+    const date = document.getElementById('topupDate').value || new Date().toISOString().split('T')[0];
 
-    if (!memberId || amount <= 0 || !date) {
-      Swal.fire('Warning', 'Please select a member, enter a valid amount greater than 0, and choose a date.', 'warning');
+    if (!memberId || amount <= 0) {
+      Swal.fire('Warning', 'Please select a member and enter a valid contribution amount.', 'warning');
       return;
     }
 
@@ -2755,59 +2761,57 @@ Thank you for investing with Tyler's Integrated Farm!
     if (!member) return;
 
     if (!member.history) member.history = [];
-    member.history.push({ date: date, amount: amount, note: 'Additional Contribution / Top-up' });
+    member.history.push({ date: date, amount: amount, note: 'Additional Contribution Top-up' });
 
     saveMembersToLocal();
 
     if (firebaseEnabled && db) {
-      try {
-        await db.collection('members').doc(memberId).update({ history: member.history });
-      } catch (err) {
-        console.warn("Firestore top-up error:", err);
-      }
+      db.collection('members').doc(memberId).update({
+        history: member.history
+      }).catch(err => console.warn(err));
     }
 
     document.getElementById('topupAmount').value = '';
-    document.getElementById('topupDate').valueAsDate = new Date();
-
     renderTable();
+
+    if (currentLoggedInMember && currentLoggedInMember.id === memberId) {
+      currentLoggedInMember = member;
+      if (member.role === 'investor') renderInvestorDashboard(member);
+      else renderMemberDashboard(member);
+    }
 
     Swal.fire({
       icon: 'success',
-      title: 'Top-up Saved!',
-      text: `Added ${formatCurrency(amount)} contribution for ${member.name}.`,
-      confirmButtonColor: '#1e40af'
+      title: 'Top-up Recorded!',
+      text: `Successfully added ₱${amount.toLocaleString()} to ${member.name}.`,
+      confirmButtonColor: '#16a34a'
     });
   }
 
-  async function deleteMember(id) {
-    const confirm = await Swal.fire({
+  function deleteMember(id) {
+    Swal.fire({
       title: 'Delete User?',
-      text: 'Are you sure you want to remove this user from the system?',
+      text: 'Are you sure you want to delete this user profile?',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc2626',
       confirmButtonText: 'Yes, Delete'
-    });
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        members = members.filter(m => m.id !== id);
+        saveMembersToLocal();
 
-    if (confirm.isConfirmed) {
-      members = members.filter(m => m.id !== id);
-      saveMembersToLocal();
-
-      if (firebaseEnabled && db) {
-        try {
-          await db.collection('members').doc(id).delete();
-        } catch (err) {
-          console.warn("Firestore delete warning:", err);
+        if (firebaseEnabled && db) {
+          await db.collection('members').doc(id).delete().catch(err => console.warn(err));
         }
+
+        populateTopupMemberDropdown();
+        renderTable();
+        renderCredentialsTable();
+
+        Swal.fire('Deleted!', 'User has been removed.', 'success');
       }
-
-      populateTopupMemberDropdown();
-      renderTable();
-      renderCredentialsTable();
-
-      Swal.fire('Deleted!', 'User has been removed successfully.', 'success');
-    }
+    });
   }
 
   function filterTables() {
@@ -2820,81 +2824,91 @@ Thank you for investing with Tyler's Integrated Farm!
     });
   }
 
-  async function saveAnnouncement() {
-    const text = document.getElementById('announcementText').value;
-    currentAnnouncement = text;
-    await saveFundSettings();
+  // CALCULATOR LOGIC
+  let calcScreen = document.getElementById('calcDisplay');
+  let calcHistoryScreen = document.getElementById('calcHistory');
+  let currentCalcVal = '0';
+  let historyCalcVal = '';
 
-    Swal.fire({
-      icon: 'success',
-      title: 'Announcement Saved!',
-      text: 'Popup announcement has been updated successfully.',
-      confirmButtonColor: '#16a34a'
-    });
-  }
-
-  function logout() {
-    localStorage.removeItem('tif_active_session');
-    currentLoggedInMember = null;
-    document.getElementById('userInfoHeader').classList.add('hidden');
-    document.getElementById('adminDashboard').classList.add('hidden');
-    document.getElementById('memberDashboard').classList.add('hidden');
-    document.getElementById('investorDashboard').classList.add('hidden');
-    document.getElementById('loginSection').classList.remove('hidden');
-    document.getElementById('adminPass').value = '';
-    document.getElementById('memberPassword').value = '';
-    document.getElementById('investorPassword').value = '';
-  }
-
-  // FLOATING CALCULATOR LOGIC
   function toggleCalculator() {
     document.getElementById('floatingCalc').classList.toggle('active');
   }
 
   function appendCalc(val) {
-    const display = document.getElementById('calcDisplay');
-    if (display.value === '0' || display.value === 'Error') {
-      display.value = val;
+    if (currentCalcVal === '0' && val !== '.') {
+      currentCalcVal = val;
     } else {
-      display.value += val;
+      currentCalcVal += val;
     }
+    updateCalcScreen();
   }
 
   function clearCalc() {
-    document.getElementById('calcDisplay').value = '0';
-    document.getElementById('calcHistory').innerText = '';
+    currentCalcVal = '0';
+    historyCalcVal = '';
+    updateCalcScreen();
+  }
+
+  function updateCalcScreen() {
+    calcScreen.value = currentCalcVal;
+    calcHistoryScreen.innerText = historyCalcVal;
   }
 
   function calculateCalc() {
-    const display = document.getElementById('calcDisplay');
-    const history = document.getElementById('calcHistory');
     try {
-      let expression = display.value.replace(/×/g, '*').replace(/÷/g, '/');
-      let result = eval(expression);
-      history.innerText = display.value + ' =';
-      display.value = result;
+      historyCalcVal = currentCalcVal + ' =';
+      let sanitized = currentCalcVal.replace(/×/g, '*').replace(/÷/g, '/');
+      let result = eval(sanitized);
+      currentCalcVal = String(result);
+      updateCalcScreen();
     } catch (e) {
-      display.value = 'Error';
+      currentCalcVal = 'Error';
+      updateCalcScreen();
+      currentCalcVal = '0';
     }
   }
 
   function calcFunc(type) {
-    const display = document.getElementById('calcDisplay');
-    const history = document.getElementById('calcHistory');
     try {
-      let val = parseFloat(display.value) || 0;
+      let num = parseFloat(currentCalcVal);
       if (type === 'sqrt') {
-        history.innerText = `\u221a(${val}) =`;
-        display.value = Math.sqrt(val);
+        historyCalcVal = `&radic;(${num}) =`;
+        currentCalcVal = String(Math.sqrt(num));
       } else if (type === 'sqr') {
-        history.innerText = `(${val})\u00b2 =`;
-        display.value = val * val;
+        historyCalcVal = `(${num})&sup2; =`;
+        currentCalcVal = String(Math.pow(num, 2));
       } else if (type === 'pm') {
-        display.value = val * -1;
+        currentCalcVal = String(num * -1);
       }
     } catch (e) {
-      display.value = 'Error';
+      currentCalcVal = 'Error';
     }
+    updateCalcScreen();
+  }
+
+  function logout() {
+    localStorage.removeItem('tif_active_session');
+    currentLoggedInMember = null;
+
+    document.getElementById('loginSection').classList.remove('hidden');
+    document.getElementById('memberDashboard').classList.add('hidden');
+    document.getElementById('investorDashboard').classList.add('hidden');
+    document.getElementById('adminDashboard').classList.add('hidden');
+    document.getElementById('userInfoHeader').classList.add('hidden');
+
+    document.getElementById('memberUsername').value = '';
+    document.getElementById('memberPassword').value = '';
+    document.getElementById('investorUsername').value = '';
+    document.getElementById('investorPassword').value = '';
+    document.getElementById('adminPass').value = '';
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Logged Out',
+      text: 'You have been successfully logged out.',
+      timer: 1500,
+      showConfirmButton: false
+    });
   }
 </script>
 </body>
