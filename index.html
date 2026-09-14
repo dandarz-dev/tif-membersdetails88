@@ -1534,7 +1534,7 @@
     listenToFirebaseData();
   });
 
-  // --- EXPORT & IMPORT BACKUP FUNCTIONS (FIXED) ---
+  // --- EXPORT & IMPORT BACKUP FUNCTIONS ---
   function exportDataBackup() {
     const settingsData = {
       overallInterest: parseFloat(document.getElementById('overallInterest').value) || 0,
@@ -1585,11 +1585,9 @@
           throw new Error("Invalid backup file format: missing members array.");
         }
 
-        // Restore members
         members = importedData.members;
         saveMembersToLocal();
 
-        // Restore settings if available
         if (importedData.settings) {
           const s = importedData.settings;
           if (s.overallInterest !== undefined) document.getElementById('overallInterest').value = s.overallInterest;
@@ -1610,7 +1608,6 @@
           }
         }
 
-        // Sync restored members to Firebase if enabled
         if (firebaseEnabled && db) {
           const batch = db.batch();
           members.forEach(m => {
@@ -1640,12 +1637,11 @@
           text: 'May sira o hindi tugma ang napili mong JSON file.'
         });
       } finally {
-        event.target.value = ''; // Reset file input
+        event.target.value = '';
       }
     };
     reader.readAsText(file);
   }
-  // ---------------------------------------------
 
   // EDIT MEMBER DETAILS FUNCTION
   async function editMemberDetails(memberId) {
@@ -2518,80 +2514,79 @@ Thank you for investing with Tyler's Integrated Farm!
     const sumRegularContrib = regularMembers.reduce((sum, m) => sum + getMemberTotalContribution(m), 0);
     const totalPoolContribution = (customContrib !== "" && !isNaN(parseFloat(customContrib))) ? parseFloat(customContrib) : sumRegularContrib;
 
-    let totalGrossInterestDisplay = 0;
-    let totalFeesDisplayVal = 0;
-    let totalReferralValDisplayVal = 0;
-    let totalFundDisplayVal = 0;
+    let totalGrossInterest = 0;
+    let totalFees = 0;
+    let totalReferralVal = 0;
 
-    members.forEach(m => {
+    members.forEach((m, idx) => {
+      const totalContrib = getMemberTotalContribution(m);
       const isInvestor = m.role === 'investor';
-      const mContrib = getMemberTotalContribution(m);
+      let share = 0;
       let netReturn = 0;
-      let sharePct = 0;
-      let feeAmt = 0;
-      let displayShareOrTerm = '';
+      let feeAmount = 0;
 
       if (!isInvestor) {
-        sharePct = totalPoolContribution > 0 ? (mContrib / totalPoolContribution) : 0;
-        const gross = sharePct * overallInterest;
-        feeAmt = gross * ((m.feePercent || 0) / 100);
-        netReturn = gross - feeAmt;
-        totalGrossInterestDisplay += netReturn;
-        displayShareOrTerm = `${(sharePct * 100).toFixed(2)}%`;
+        share = totalPoolContribution > 0 ? (totalContrib / totalPoolContribution) : 0;
+        const gross = share * overallInterest;
+        feeAmount = gross * ((m.feePercent || 0) / 100);
+        netReturn = gross - feeAmount;
+
+        totalGrossInterest += netReturn;
+        totalFees += feeAmount;
       } else {
-        const interestRate = m.interestRate !== undefined ? parseFloat(m.interestRate) : 15;
-        const loanTerm = m.loanTerm !== undefined ? parseInt(m.loanTerm) : 12;
-        const gross = mContrib * (interestRate / 100);
-        feeAmt = gross * ((m.feePercent || 0) / 100);
-        netReturn = gross - feeAmt;
-        displayShareOrTerm = `${loanTerm} Mos @ ${interestRate}%`;
+        const intRate = m.interestRate !== undefined ? parseFloat(m.interestRate) : 15;
+        const gross = totalContrib * (intRate / 100);
+        feeAmount = gross * ((m.feePercent || 0) / 100);
+        netReturn = gross - feeAmount;
       }
 
-      totalFeesDisplayVal += feeAmt;
+      const refPts = m.referralPoints || 0;
+      const refVal = refPts * pointVal;
+      totalReferralVal += refVal;
 
-      const referralPts = m.referralPoints || 0;
-      const referralVal = referralPts * pointVal;
-      totalReferralValDisplayVal += referralVal;
-
-      const newNetBal = mContrib + netReturn + referralVal;
-      totalFundDisplayVal += newNetBal;
+      const newBalance = totalContrib + netReturn + refVal;
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>
-          <strong>${m.name}</strong>
-          <span class="small-subtext">Role: <span style="text-transform:uppercase; font-weight:600; color:${isInvestor ? '#0d9488':'#1e40af'}">${m.role || 'member'}</span></span>
-          <span class="small-subtext">User: ${m.username || 'N/A'}</span>
+          <div style="font-weight:700;">${m.name}</div>
+          <span class="small-subtext">@${m.username || 'n/a'} (${m.role || 'member'})</span>
         </td>
         <td>
-          ${m.address || 'N/A'}
-          <span class="small-subtext">Birth: ${m.birthdate || 'N/A'} (${calculateAge(m.birthdate)} yrs)</span>
+          <div>${m.address || 'N/A'}</div>
+          <span class="small-subtext">Age: ${calculateAge(m.birthdate)}</span>
         </td>
-        <td class="text-right text-bold">${formatCurrency(mContrib)}</td>
+        <td class="text-right text-bold">${formatCurrency(totalContrib)}</td>
         <td class="text-center">
-          <span style="font-weight:600; color:#d97706;">${referralPts} pts</span>
-          <span class="small-subtext">${formatCurrency(referralVal)}</span>
+          <span style="font-weight:700; color:#d97706;">${refPts} pts</span>
+          <span class="small-subtext">${formatCurrency(refVal)}</span>
         </td>
-        <td class="text-center">${displayShareOrTerm}</td>
+        <td class="text-center">
+          ${isInvestor ? `<span style="font-size:0.75rem; background:#fef3c7; color:#d97706; padding:2px 6px; border-radius:4px; font-weight:600;">${m.loanTerm || 12}M @ ${m.interestRate || 15}%</span>` : `<span>${(share * 100).toFixed(2)}%</span>`}
+        </td>
         <td class="text-center">
           <input type="number" class="inline-fee-input" value="${m.feePercent || 0}" min="0" max="100" step="any" onchange="updateMemberFee('${m.id}', this.value)">%
         </td>
         <td class="text-right text-green">${formatCurrency(netReturn)}</td>
-        <td class="text-right text-bold">${formatCurrency(newNetBal)}</td>
-        <td class="text-center" style="white-space: nowrap;">
-          <button class="btn btn-edit" onclick="editMemberDetails('${m.id}')" title="Edit Profile"><i class="fa-solid fa-pen-to-square"></i></button>
-          ${m.cashoutRequested ? `<button class="btn btn-admin-pay" onclick="adminPayBonus('${m.id}')" title="Settle Cash Out">PAY</button>` : ''}
-          <button class="btn btn-outline-danger" onclick="deleteMember('${m.id}')" title="Delete User"><i class="fa-solid fa-trash"></i></button>
+        <td class="text-right text-bold" style="color:var(--primary-color);">${formatCurrency(newBalance)}</td>
+        <td class="text-center">
+          <div style="display:flex; gap:4px; justify-content:center; flex-wrap:wrap;">
+            <button class="btn btn-edit" onclick="editMemberDetails('${m.id}')" title="Edit Profile"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-outline-danger" onclick="deleteMember('${m.id}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
+            ${m.cashoutRequested ? `<button class="btn btn-admin-pay" onclick="adminPayBonus('${m.id}')">PAY (${formatCurrency(refVal)})</button>` : ''}
+          </div>
         </td>
       `;
       tbody.appendChild(tr);
     });
 
     document.getElementById('totalContributionDisplay').innerText = totalPoolContribution.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('totalInterestDisplay').innerText = totalGrossInterestDisplay.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('totalFeesDisplay').innerText = totalFeesDisplayVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('totalReferralValDisplay').innerText = totalReferralValDisplayVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('totalFundDisplay').innerText = totalFundDisplayVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalInterestDisplay').innerText = overallInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalFeesDisplay').innerText = totalFees.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalReferralValDisplay').innerText = totalReferralVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    const totalCombinedFund = totalPoolContribution + overallInterest + totalReferralVal - totalFees;
+    document.getElementById('totalFundDisplay').innerText = totalCombinedFund.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
     renderAdminCharts();
   }
@@ -2604,30 +2599,298 @@ Thank you for investing with Tyler's Integrated Farm!
     members.forEach(m => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><strong>${m.name}</strong></td>
-        <td><span style="text-transform:uppercase; font-weight:600;">${m.role || 'member'}</span></td>
-        <td>${m.birthdate || 'N/A'} (${calculateAge(m.birthdate)} yrs)</td>
+        <td style="font-weight:600;">${m.name}</td>
+        <td><span style="text-transform:uppercase; font-size:0.75rem; font-weight:700; background:#e2e8f0; padding:2px 6px; border-radius:4px;">${m.role || 'member'}</span></td>
+        <td>${m.birthdate || 'N/A'} (Age: ${calculateAge(m.birthdate)})</td>
         <td>${m.address || 'N/A'}</td>
-        <td><code>${m.username || 'N/A'}</code></td>
-        <td><code>${m.password || 'N/A'}</code></td>
+        <td><code>${m.username || 'n/a'}</code></td>
+        <td><code>${m.password || 'n/a'}</code></td>
         <td class="text-center">
-          <button class="btn btn-edit" onclick="editMemberDetails('${m.id}')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+          <button class="btn btn-edit" onclick="editMemberDetails('${m.id}')"><i class="fa-solid fa-pen"></i> Edit</button>
         </td>
       `;
       tbody.appendChild(tr);
     });
   }
 
-  function updateMemberFee(id, val) {
-    const member = members.find(m => m.id === id);
-    if (member) {
-      member.feePercent = parseFloat(val) || 0;
-      saveMembersToLocal();
-      if (firebaseEnabled && db) {
-        db.collection('members').doc(id).update({ feePercent: member.feePercent }).catch(err => console.warn(err));
-      }
-      renderTable();
+  async function updateMemberFee(memberId, newFee) {
+    const member = members.find(m => m.id === memberId);
+    if (!member) return;
+    member.feePercent = parseFloat(newFee) || 0;
+    saveMembersToLocal();
+
+    if (firebaseEnabled && db) {
+      await db.collection('members').doc(memberId).update({ feePercent: member.feePercent }).catch(err => console.warn(err));
     }
+    renderTable();
+  }
+
+  async function addMember() {
+    const name = document.getElementById('memberName').value.trim();
+    const contrib = parseFloat(document.getElementById('memberContribInput').value) || 0;
+    const role = document.getElementById('memberRoleSelect').value;
+    const fee = parseFloat(document.getElementById('memberFee').value) || 0;
+    const interestRate = parseFloat(document.getElementById('investorInterestRate').value) || 15;
+    const loanTerm = parseInt(document.getElementById('investorLoanTerm').value) || 12;
+    const referredBy = document.getElementById('referrerSelect').value;
+    const initialPoints = parseFloat(document.getElementById('memberPointsInput').value) || 0;
+    const birthdate = document.getElementById('memberBirthdate').value;
+    const address = document.getElementById('memberAddress').value.trim();
+    const username = document.getElementById('newUsername').value.trim();
+    const password = document.getElementById('newPassword').value.trim() || 'password123';
+
+    if (!name || !username) {
+      Swal.fire('Warning', 'Please fill in Name and Username.', 'warning');
+      return;
+    }
+
+    const duplicate = members.find(m => m.username && m.username.toLowerCase() === username.toLowerCase());
+    if (duplicate) {
+      Swal.fire('Error', 'Username already exists! Please choose another.', 'error');
+      return;
+    }
+
+    const newMemberId = 'm_' + Date.now();
+    const historyEntry = contrib > 0 ? [{ date: new Date().toISOString().split('T')[0], amount: contrib, note: 'Initial Capital / Contribution' }] : [];
+
+    const newMemberObj = {
+      id: newMemberId,
+      name,
+      role,
+      feePercent: fee,
+      interestRate,
+      loanTerm,
+      referredBy,
+      referralPoints: initialPoints,
+      birthdate,
+      address,
+      username,
+      password,
+      history: historyEntry,
+      cashoutRequested: false
+    };
+
+    if (referredBy) {
+      const l1 = members.find(m => m.id === referredBy);
+      if (l1) {
+        const p1 = parseFloat(document.getElementById('level1Points').value) || 1;
+        l1.referralPoints = (l1.referralPoints || 0) + p1;
+
+        if (l1.referredBy) {
+          const l2 = members.find(m => m.id === l1.referredBy);
+          if (l2) {
+            const p2 = parseFloat(document.getElementById('level2Points').value) || 0.5;
+            l2.referralPoints = (l2.referralPoints || 0) + p2;
+
+            if (l2.referredBy) {
+              const l3 = members.find(m => m.id === l2.referredBy);
+              if (l3) {
+                const p3 = parseFloat(document.getElementById('level3Points').value) || 0.25;
+                l3.referralPoints = (l3.referralPoints || 0) + p3;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    members.push(newMemberObj);
+    saveMembersToLocal();
+
+    if (firebaseEnabled && db) {
+      try {
+        await db.collection('members').doc(newMemberId).set(newMemberObj);
+        for (const m of members) {
+          await db.collection('members').doc(m.id).update({ referralPoints: m.referralPoints || 0 });
+        }
+      } catch (err) {
+        console.warn("Firebase add member warning:", err);
+      }
+    }
+
+    document.getElementById('memberName').value = '';
+    document.getElementById('memberContribInput').value = '';
+    document.getElementById('memberFee').value = '0';
+    document.getElementById('memberPointsInput').value = '0';
+    document.getElementById('memberBirthdate').value = '';
+    document.getElementById('memberAddress').value = '';
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newPassword').value = '';
+
+    populateTopupMemberDropdown();
+    renderTable();
+    renderCredentialsTable();
+
+    Swal.fire({
+      icon: 'success',
+      title: 'User Added Successfully!',
+      text: `${name} has been added to Tyler's Integrated Farm.`,
+      confirmButtonColor: '#1e40af'
+    });
+  }
+
+  async function addContributionTopUp() {
+    const memberId = document.getElementById('topupMemberSelect').value;
+    const amount = parseFloat(document.getElementById('topupAmount').value) || 0;
+    const dateInput = document.getElementById('topupDate').value || new Date().toISOString().split('T')[0];
+
+    if (!memberId || amount <= 0) {
+      Swal.fire('Warning', 'Please select a member and enter a valid top-up amount greater than 0.', 'warning');
+      return;
+    }
+
+    const member = members.find(m => m.id === memberId);
+    if (!member) return;
+
+    if (!member.history) member.history = [];
+    member.history.push({
+      date: dateInput,
+      amount: amount,
+      note: 'Additional Contribution Top-up'
+    });
+
+    saveMembersToLocal();
+
+    if (firebaseEnabled && db) {
+      try {
+        await db.collection('members').doc(memberId).update({
+          history: member.history
+        });
+      } catch (err) {
+        console.warn("Firebase topup warning:", err);
+      }
+    }
+
+    document.getElementById('topupAmount').value = '';
+    renderTable();
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Top-up Recorded!',
+      text: `Successfully added ₱${amount.toLocaleString()} to ${member.name}.`,
+      confirmButtonColor: '#1e40af'
+    });
+  }
+
+  async function deleteMember(memberId) {
+    const confirm = await Swal.fire({
+      title: 'Delete Member?',
+      text: 'Are you sure you want to delete this user from the system?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      confirmButtonText: 'Yes, Delete'
+    });
+
+    if (confirm.isConfirmed) {
+      members = members.filter(m => m.id !== memberId);
+      saveMembersToLocal();
+
+      if (firebaseEnabled && db) {
+        try {
+          await db.collection('members').doc(memberId).delete();
+        } catch (err) {
+          console.warn("Firebase delete warning:", err);
+        }
+      }
+
+      populateTopupMemberDropdown();
+      renderTable();
+      renderCredentialsTable();
+
+      Swal.fire('Deleted!', 'User has been removed.', 'success');
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem('tif_active_session');
+    currentLoggedInMember = null;
+    document.getElementById('userInfoHeader').classList.add('hidden');
+    document.getElementById('adminDashboard').classList.add('hidden');
+    document.getElementById('memberDashboard').classList.add('hidden');
+    document.getElementById('investorDashboard').classList.add('hidden');
+    document.getElementById('loginSection').classList.remove('hidden');
+    document.getElementById('adminPass').value = '';
+    document.getElementById('memberPassword').value = '';
+    document.getElementById('investorPassword').value = '';
+  }
+
+  function filterTables() {
+    const query = document.getElementById('tableSearchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#reportTable tbody tr');
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      row.style.display = text.includes(query) ? '' : 'none';
+    });
+  }
+
+  // CALCULATOR LOGIC
+  function toggleCalculator() {
+    document.getElementById('floatingCalc').classList.toggle('active');
+  }
+
+  let calcDisplayValue = "0";
+  let calcHistoryValue = "";
+
+  function updateCalcDisplay() {
+    document.getElementById('calcDisplay').value = calcDisplayValue;
+    document.getElementById('calcHistory').innerText = calcHistoryValue;
+  }
+
+  function appendCalc(val) {
+    if (calcDisplayValue === "0" && !isNaN(val)) {
+      calcDisplayValue = val;
+    } else {
+      calcDisplayValue += val;
+    }
+    updateCalcDisplay();
+  }
+
+  function clearCalc() {
+    calcDisplayValue = "0";
+    calcHistoryValue = "";
+    updateCalcDisplay();
+  }
+
+  function calculateCalc() {
+    try {
+      calcHistoryValue = calcDisplayValue + " =";
+      let res = eval(calcDisplayValue.replace(/×/g, '*').replace(/÷/g, '/'));
+      calcDisplayValue = String(res);
+    } catch (e) {
+      calcDisplayValue = "Error";
+    }
+    updateCalcDisplay();
+  }
+
+  function calcFunc(type) {
+    try {
+      let val = parseFloat(calcDisplayValue);
+      if (type === 'sqrt') {
+        calcHistoryValue = `&radic;(${calcDisplayValue}) =`;
+        calcDisplayValue = String(Math.sqrt(val));
+      } else if (type === 'sqr') {
+        calcHistoryValue = `(${calcDisplayValue})&sup2; =`;
+        calcDisplayValue = String(val * val);
+      } else if (type === 'pm') {
+        calcDisplayValue = String(val * -1);
+      }
+    } catch (e) {
+      calcDisplayValue = "Error";
+    }
+    updateCalcDisplay();
+  }
+
+  async function saveAnnouncement() {
+    const txt = document.getElementById('announcementText').value.trim();
+    currentAnnouncement = txt;
+    await saveFundSettings();
+    Swal.fire({
+      icon: 'success',
+      title: 'Announcement Saved!',
+      text: 'Announcement has been updated successfully.',
+      confirmButtonColor: '#16a34a'
+    });
   }
 </script>
 </body>
