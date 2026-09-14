@@ -23,6 +23,11 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <!-- Chart.js para sa Graphical Status -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase SDKs (v8 compatibility) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
   <style>
@@ -1301,31 +1306,6 @@
   </div>
 </div>
 
-<!-- MODERN FIREBASE INITIALIZATION SCRIPT -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAZ6xLYGtUfXohAeHzTPOnxyoV7fiVgnKQ",
-    authDomain: "tif-memberdata.firebaseapp.com",
-    databaseURL: "https://tif-memberdata-default-rtdb.firebaseio.com",
-    projectId: "tif-memberdata",
-    storageBucket: "tif-memberdata.firebasestorage.app",
-    messagingSenderId: "324644767059",
-    appId: "1:324644767059:web:446fde751ac47d10030da6",
-    measurementId: "G-G1NYTXYJ8J"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const db = getFirestore(app);
-
-  window.db = db;
-  window.firebaseEnabled = true;
-</script>
-
 <script>
   // DYNAMIC MANIFEST FOR PWA
   const dynamicManifest = {
@@ -1344,6 +1324,30 @@
   const blobManifest = new Blob([stringManifest], {type: 'application/json'});
   const manifestURL = URL.createObjectURL(blobManifest);
   document.getElementById('manifestPlaceholder').setAttribute('href', manifestURL);
+
+  // FIREBASE CONFIGURATION
+  const firebaseConfig = {
+    apiKey: "AIzaSyDMfUFvlHaUVV2keLYcNz8U1xVAx-i6B4c",
+    authDomain: "tif-membersdata.firebaseapp.com",
+    projectId: "tif-membersdata",
+    storageBucket: "tif-membersdata.firebasestorage.app",
+    messagingSenderId: "97797558581",
+    appId: "1:97797558581:web:6ab16c6ff487bbb9c17c7c",
+    measurementId: "G-YFLWJL89D7"
+  };
+
+  let db = null;
+  let auth = null;
+  let firebaseEnabled = false;
+
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    auth = firebase.auth();
+    firebaseEnabled = true;
+  } catch (err) {
+    console.warn("Firebase initialized in fallback mode:", err.message);
+  }
 
   // CHART INSTANCES
   let adminSummaryChartInstance = null;
@@ -1470,11 +1474,66 @@
     }
   }
 
-  window.addEventListener('DOMContentLoaded', () => {
+  // AUTO-SYNC FIREBASE LISTENER (LIVE UPDATES)
+  function listenToFirebaseData() {
     loadLocalData();
-    checkExistingSession();
+
+    if (firebaseEnabled && db) {
+      db.collection('settings').doc('fund').onSnapshot(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (data.overallInterest !== undefined) document.getElementById('overallInterest').value = data.overallInterest;
+          if (data.customTotalContribution !== undefined) document.getElementById('customTotalContribution').value = data.customTotalContribution;
+          if (data.pointValue !== undefined) document.getElementById('pointValueInput').value = data.pointValue;
+          if (data.level1Points !== undefined) document.getElementById('level1Points').value = data.level1Points;
+          if (data.level2Points !== undefined) document.getElementById('level2Points').value = data.level2Points;
+          if (data.level3Points !== undefined) document.getElementById('level3Points').value = data.level3Points;
+          if (data.adminPassword) adminPassword = data.adminPassword;
+          if (data.announcement) {
+            currentAnnouncement = data.announcement;
+            document.getElementById('announcementText').value = currentAnnouncement;
+          }
+          localStorage.setItem('tif_fund_settings', JSON.stringify(data));
+        }
+        renderTable();
+      }, err => console.warn("Firestore settings fallback:", err));
+
+      db.collection('members').onSnapshot(snapshot => {
+        members = [];
+        snapshot.forEach(doc => {
+          members.push({ id: doc.id, ...doc.data() });
+        });
+        saveMembersToLocal();
+        populateTopupMemberDropdown();
+        renderTable();
+        renderCredentialsTable();
+
+        if (currentLoggedInMember) {
+          const updated = members.find(m => m.id === currentLoggedInMember.id);
+          if (updated) {
+            currentLoggedInMember = updated;
+            if (updated.role === 'investor') {
+              renderInvestorDashboard(updated);
+            } else {
+              renderMemberDashboard(updated);
+            }
+          }
+        }
+        checkExistingSession();
+      }, err => {
+        console.warn("Firestore members fallback:", err);
+        checkExistingSession();
+      });
+    } else {
+      checkExistingSession();
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    listenToFirebaseData();
   });
 
+  // --- EXPORT & IMPORT BACKUP FUNCTIONS (FIXED) ---
   function exportDataBackup() {
     const settingsData = {
       overallInterest: parseFloat(document.getElementById('overallInterest').value) || 0,
@@ -1525,9 +1584,11 @@
           throw new Error("Invalid backup file format: missing members array.");
         }
 
+        // Restore members
         members = importedData.members;
         saveMembersToLocal();
 
+        // Restore settings if available
         if (importedData.settings) {
           const s = importedData.settings;
           if (s.overallInterest !== undefined) document.getElementById('overallInterest').value = s.overallInterest;
@@ -1542,8 +1603,24 @@
             document.getElementById('announcementText').value = currentAnnouncement;
           }
           localStorage.setItem('tif_fund_settings', JSON.stringify(s));
+
+          if (firebaseEnabled && db) {
+            await db.collection('settings').doc('fund').set(s, { merge: true }).catch(err => console.warn(err));
+          }
         }
 
+        // Sync restored members to Firebase if enabled
+        if (firebaseEnabled && db) {
+          const batch = db.batch();
+          members.forEach(m => {
+            const docRef = m.id ? db.collection('members').doc(m.id) : db.collection('members').doc();
+            m.id = docRef.id;
+            batch.set(docRef, m);
+          });
+          await batch.commit().catch(err => console.warn("Firebase batch restore warning:", err));
+        }
+
+        saveMembersToLocal();
         populateTopupMemberDropdown();
         renderTable();
         renderCredentialsTable();
@@ -1562,12 +1639,14 @@
           text: 'May sira o hindi tugma ang napili mong JSON file.'
         });
       } finally {
-        event.target.value = '';
+        event.target.value = ''; // Reset file input
       }
     };
     reader.readAsText(file);
   }
+  // ---------------------------------------------
 
+  // EDIT MEMBER DETAILS FUNCTION
   async function editMemberDetails(memberId) {
     const member = members.find(m => m.id === memberId);
     if (!member) return;
@@ -1641,6 +1720,22 @@
       member.password = formValues.password;
 
       saveMembersToLocal();
+
+      if (firebaseEnabled && db) {
+        try {
+          await db.collection('members').doc(memberId).update({
+            name: member.name,
+            role: member.role,
+            birthdate: member.birthdate,
+            address: member.address,
+            username: member.username,
+            password: member.password
+          });
+        } catch (err) {
+          console.warn("Firestore update profile warning:", err);
+        }
+      }
+
       populateTopupMemberDropdown();
       renderTable();
       renderCredentialsTable();
@@ -1709,6 +1804,10 @@
             member.cashoutRequested = true;
             saveMembersToLocal();
 
+            if (firebaseEnabled && db) {
+              db.collection('members').doc(memberId).update({ cashoutRequested: true }).catch(err => console.warn(err));
+            }
+
             if(member.role === 'investor') {
               renderInvestorDashboard(member);
             } else {
@@ -1740,8 +1839,15 @@
         member.cashoutRequested = false;
 
         saveMembersToLocal();
-        renderTable();
 
+        if (firebaseEnabled && db) {
+          db.collection('members').doc(memberId).update({
+            referralPoints: 0,
+            cashoutRequested: false
+          }).catch(err => console.warn(err));
+        }
+
+        renderTable();
         if (currentLoggedInMember && currentLoggedInMember.id === memberId) {
           currentLoggedInMember = member;
           if(member.role === 'investor') renderInvestorDashboard(member);
@@ -1816,7 +1922,7 @@ Thank you for investing with Tyler's Integrated Farm!
     });
   }
 
-  function saveFundSettings() {
+  async function saveFundSettings() {
     const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
     const customContrib = document.getElementById('customTotalContribution').value;
     const pointValue = parseFloat(document.getElementById('pointValueInput').value) || 100;
@@ -1836,6 +1942,14 @@ Thank you for investing with Tyler's Integrated Farm!
     };
 
     localStorage.setItem('tif_fund_settings', JSON.stringify(settingsData));
+
+    if (firebaseEnabled && db) {
+      try {
+        await db.collection('settings').doc('fund').set(settingsData, { merge: true });
+      } catch (err) {
+        console.warn("Firestore sync warning:", err);
+      }
+    }
     return true;
   }
 
@@ -1850,7 +1964,7 @@ Thank you for investing with Tyler's Integrated Farm!
     });
 
     if (confirm.isConfirmed) {
-      saveFundSettings();
+      await saveFundSettings();
       Swal.fire({
         icon: 'success',
         title: 'Settings Saved!',
@@ -1879,7 +1993,7 @@ Thank you for investing with Tyler's Integrated Farm!
 
     if (confirm.isConfirmed) {
       adminPassword = newPass;
-      saveFundSettings();
+      await saveFundSettings();
       document.getElementById('newAdminPass').value = '';
       Swal.fire({
         icon: 'success',
@@ -2508,10 +2622,280 @@ Thank you for investing with Tyler's Integrated Farm!
     if (member) {
       member.feePercent = parseFloat(val) || 0;
       saveMembersToLocal();
+      if (firebaseEnabled && db) {
+        db.collection('members').doc(id).update({ feePercent: member.feePercent }).catch(err => console.warn(err));
+      }
       renderTable();
     }
   }
-</script>
 
+  async function addMember() {
+    const name = document.getElementById('memberName').value.trim();
+    const contrib = parseFloat(document.getElementById('memberContribInput').value) || 0;
+    const role = document.getElementById('memberRoleSelect').value;
+    const fee = parseFloat(document.getElementById('memberFee').value) || 0;
+    const referrerId = document.getElementById('referrerSelect').value;
+    const points = parseFloat(document.getElementById('memberPointsInput').value) || 0;
+    const birthdate = document.getElementById('memberBirthdate').value;
+    const address = document.getElementById('memberAddress').value.trim();
+    const username = document.getElementById('newUsername').value.trim();
+    const password = document.getElementById('newPassword').value.trim() || 'password123';
+
+    const interestRate = parseFloat(document.getElementById('investorInterestRate').value) || 15;
+    const loanTerm = parseInt(document.getElementById('investorLoanTerm').value) || 12;
+
+    if (!name || !username) {
+      Swal.fire('Warning', 'Please fill in Member Name and Username.', 'warning');
+      return;
+    }
+
+    const duplicate = members.find(m => m.username && m.username.toLowerCase() === username.toLowerCase());
+    if (duplicate) {
+      Swal.fire('Error', 'Username already exists! Choose another username.', 'error');
+      return;
+    }
+
+    const newMemberObj = {
+      name,
+      role,
+      feePercent: fee,
+      referredBy: referrerId || "",
+      referralPoints: points,
+      birthdate,
+      address,
+      username,
+      password,
+      interestRate: role === 'investor' ? interestRate : undefined,
+      loanTerm: role === 'investor' ? loanTerm : undefined,
+      cashoutRequested: false,
+      history: contrib > 0 ? [{ date: new Date().toISOString().split('T')[0], amount: contrib, note: 'Initial Capital / Contribution' }] : []
+    };
+
+    // Up to 3-Level Override Points System distribution
+    const l1Pts = parseFloat(document.getElementById('level1Points').value) || 1;
+    const l2Pts = parseFloat(document.getElementById('level2Points').value) || 0.5;
+    const l3Pts = parseFloat(document.getElementById('level3Points').value) || 0.25;
+
+    if (referrerId) {
+      const l1Member = members.find(m => m.id === referrerId);
+      if (l1Member) {
+        l1Member.referralPoints = (l1Member.referralPoints || 0) + l1Pts;
+        if (firebaseEnabled && db) {
+          db.collection('members').doc(l1Member.id).update({ referralPoints: l1Member.referralPoints }).catch(err => console.warn(err));
+        }
+
+        if (l1Member.referredBy) {
+          const l2Member = members.find(m => m.id === l1Member.referredBy);
+          if (l2Member) {
+            l2Member.referralPoints = (l2Member.referralPoints || 0) + l2Pts;
+            if (firebaseEnabled && db) {
+              db.collection('members').doc(l2Member.id).update({ referralPoints: l2Member.referralPoints }).catch(err => console.warn(err));
+            }
+
+            if (l2Member.referredBy) {
+              const l3Member = members.find(m => m.id === l2Member.referredBy);
+              if (l3Member) {
+                l3Member.referralPoints = (l3Member.referralPoints || 0) + l3Pts;
+                if (firebaseEnabled && db) {
+                  db.collection('members').doc(l3Member.id).update({ referralPoints: l3Member.referralPoints }).catch(err => console.warn(err));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (firebaseEnabled && db) {
+      try {
+        const docRef = await db.collection('members').add(newMemberObj);
+        newMemberObj.id = docRef.id;
+      } catch (err) {
+        console.warn("Firestore add member error:", err);
+        newMemberObj.id = 'local_' + Date.now();
+      }
+    } else {
+      newMemberObj.id = 'local_' + Date.now();
+    }
+
+    members.push(newMemberObj);
+    saveMembersToLocal();
+
+    document.getElementById('memberName').value = '';
+    document.getElementById('memberContribInput').value = '';
+    document.getElementById('memberPointsInput').value = '0';
+    document.getElementById('memberBirthdate').value = '';
+    document.getElementById('memberAddress').value = '';
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newPassword').value = '';
+
+    populateTopupMemberDropdown();
+    renderTable();
+    renderCredentialsTable();
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Member Added!',
+      text: `${name} has been successfully added to Tyler's Integrated Farm.`,
+      confirmButtonColor: '#1e40af'
+    });
+  }
+
+  async function addContributionTopUp() {
+    const memberId = document.getElementById('topupMemberSelect').value;
+    const amount = parseFloat(document.getElementById('topupAmount').value) || 0;
+    const date = document.getElementById('topupDate').value;
+
+    if (!memberId || amount <= 0 || !date) {
+      Swal.fire('Warning', 'Please select a member, enter a valid amount greater than 0, and choose a date.', 'warning');
+      return;
+    }
+
+    const member = members.find(m => m.id === memberId);
+    if (!member) return;
+
+    if (!member.history) member.history = [];
+    member.history.push({ date: date, amount: amount, note: 'Additional Contribution / Top-up' });
+
+    saveMembersToLocal();
+
+    if (firebaseEnabled && db) {
+      try {
+        await db.collection('members').doc(memberId).update({ history: member.history });
+      } catch (err) {
+        console.warn("Firestore top-up error:", err);
+      }
+    }
+
+    document.getElementById('topupAmount').value = '';
+    document.getElementById('topupDate').valueAsDate = new Date();
+
+    renderTable();
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Top-up Saved!',
+      text: `Added ${formatCurrency(amount)} contribution for ${member.name}.`,
+      confirmButtonColor: '#1e40af'
+    });
+  }
+
+  async function deleteMember(id) {
+    const confirm = await Swal.fire({
+      title: 'Delete User?',
+      text: 'Are you sure you want to remove this user from the system?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      confirmButtonText: 'Yes, Delete'
+    });
+
+    if (confirm.isConfirmed) {
+      members = members.filter(m => m.id !== id);
+      saveMembersToLocal();
+
+      if (firebaseEnabled && db) {
+        try {
+          await db.collection('members').doc(id).delete();
+        } catch (err) {
+          console.warn("Firestore delete warning:", err);
+        }
+      }
+
+      populateTopupMemberDropdown();
+      renderTable();
+      renderCredentialsTable();
+
+      Swal.fire('Deleted!', 'User has been removed successfully.', 'success');
+    }
+  }
+
+  function filterTables() {
+    const query = document.getElementById('tableSearchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#reportTable tbody tr');
+
+    rows.forEach(row => {
+      const text = row.innerText.toLowerCase();
+      row.style.display = text.includes(query) ? '' : 'none';
+    });
+  }
+
+  async function saveAnnouncement() {
+    const text = document.getElementById('announcementText').value;
+    currentAnnouncement = text;
+    await saveFundSettings();
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Announcement Saved!',
+      text: 'Popup announcement has been updated successfully.',
+      confirmButtonColor: '#16a34a'
+    });
+  }
+
+  function logout() {
+    localStorage.removeItem('tif_active_session');
+    currentLoggedInMember = null;
+    document.getElementById('userInfoHeader').classList.add('hidden');
+    document.getElementById('adminDashboard').classList.add('hidden');
+    document.getElementById('memberDashboard').classList.add('hidden');
+    document.getElementById('investorDashboard').classList.add('hidden');
+    document.getElementById('loginSection').classList.remove('hidden');
+    document.getElementById('adminPass').value = '';
+    document.getElementById('memberPassword').value = '';
+    document.getElementById('investorPassword').value = '';
+  }
+
+  // FLOATING CALCULATOR LOGIC
+  function toggleCalculator() {
+    document.getElementById('floatingCalc').classList.toggle('active');
+  }
+
+  function appendCalc(val) {
+    const display = document.getElementById('calcDisplay');
+    if (display.value === '0' || display.value === 'Error') {
+      display.value = val;
+    } else {
+      display.value += val;
+    }
+  }
+
+  function clearCalc() {
+    document.getElementById('calcDisplay').value = '0';
+    document.getElementById('calcHistory').innerText = '';
+  }
+
+  function calculateCalc() {
+    const display = document.getElementById('calcDisplay');
+    const history = document.getElementById('calcHistory');
+    try {
+      let expression = display.value.replace(/×/g, '*').replace(/÷/g, '/');
+      let result = eval(expression);
+      history.innerText = display.value + ' =';
+      display.value = result;
+    } catch (e) {
+      display.value = 'Error';
+    }
+  }
+
+  function calcFunc(type) {
+    const display = document.getElementById('calcDisplay');
+    const history = document.getElementById('calcHistory');
+    try {
+      let val = parseFloat(display.value) || 0;
+      if (type === 'sqrt') {
+        history.innerText = `\u221a(${val}) =`;
+        display.value = Math.sqrt(val);
+      } else if (type === 'sqr') {
+        history.innerText = `(${val})\u00b2 =`;
+        display.value = val * val;
+      } else if (type === 'pm') {
+        display.value = val * -1;
+      }
+    } catch (e) {
+      display.value = 'Error';
+    }
+  }
+</script>
 </body>
 </html>
