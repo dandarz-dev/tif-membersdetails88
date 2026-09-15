@@ -353,6 +353,26 @@
       margin-top: 4px;
     }
 
+    .badge-role-investor {
+      background-color: #ccfbf1;
+      color: #0f766e;
+      border: 1px solid #99f6e4;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .badge-role-member {
+      background-color: #dbeafe;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
     .btn-download-portal {
       background-color: #16a34a;
       color: #ffffff;
@@ -435,6 +455,7 @@
     .dash-card.red { border-left-color: var(--danger-color); }
     .dash-card.purple { border-left-color: #8b5cf6; }
     .dash-card.orange { border-left-color: #f59e0b; }
+    .dash-card.teal { border-left-color: #0d9488; }
 
     .dash-card .label {
       font-size: 0.75rem;
@@ -932,7 +953,7 @@
       <div class="card-box" style="display: flex; flex-direction: column; gap: 15px;">
         <div>
           <h3 style="margin-top:0; font-size: 1.1rem;">Fund Breakdown Details</h3>
-          <p style="font-size: 0.9rem;"><strong>Total Pool Contribution:</strong> ₱<span id="mPoolContribution">0.00</span></p>
+          <p style="font-size: 0.9rem;"><strong>Total Pool Capital (Members Only):</strong> ₱<span id="mPoolContribution">0.00</span></p>
           <p style="font-size: 0.9rem;"><strong>Total Interest Distributed:</strong> ₱<span id="mPoolInterest">0.00</span></p>
           <p style="font-size: 0.9rem;"><strong>Gross Interest Earned:</strong> ₱<span id="mGrossInterest">0.00</span></p>
           <p style="font-size: 0.9rem; color: #d97706;"><strong>Referral / Override Value:</strong> <span id="mReferralRewardDetail">₱0.00</span></p>
@@ -961,12 +982,12 @@
     <div id="investorDashboard" class="hidden">
       <div class="card-box" style="background: #f0fdf4; border-color: #bbf7d0;">
         <h2 class="section-title" style="color: #166534;"><i class="fa-solid fa-chart-line"></i> Welcome Investor, <span id="investorNameDisplay"></span>!</h2>
-        <p style="margin: 0; color: #14532d; font-size: 0.9rem;">Track your high-yield farm investments, custom loan terms, and interest returns.</p>
+        <p style="margin: 0; color: #14532d; font-size: 0.9rem;">Track your independent high-yield farm investor contributions, custom terms, and direct dividend payouts.</p>
       </div>
 
       <div class="dashboard-grid">
-        <div class="dash-card">
-          <div class="label">Total Invested Capital</div>
+        <div class="dash-card teal">
+          <div class="label">Total Investor Capital</div>
           <div class="value">₱<span id="invCapital">0.00</span></div>
         </div>
         <div class="dash-card green">
@@ -974,30 +995,47 @@
           <div class="value">₱<span id="invReturns">0.00</span></div>
         </div>
         <div class="dash-card orange">
-          <div class="label">Investor Loan / Interest Term</div>
+          <div class="label">Investor Term & Rate Type</div>
           <div class="value"><span id="invTermDisplay">0 Months @ 0%</span></div>
         </div>
         <div class="dash-card red">
           <div class="label">Investor Fees</div>
           <div class="value">₱<span id="invFeeDisplay">0.00</span></div>
         </div>
-        <div class="dash-card">
+        <div class="dash-card purple">
           <div class="label">Total Portfolio Valuation</div>
           <div class="value">₱<span id="invValuation">0.00</span></div>
         </div>
       </div>
 
+      <!-- INVESTOR SPECIFIC CONTRIBUTION HISTORY -->
+      <div class="card-box">
+        <h3 class="section-title"><i class="fa-solid fa-clock-rotate-left"></i> Investor Contribution & Tranche History</h3>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type / Farm Project Tranche</th>
+                <th class="text-right">Amount (₱)</th>
+              </tr>
+            </thead>
+            <tbody id="investorHistoryTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="chart-container-box">
-        <h3 class="section-title"><i class="fa-solid fa-chart-pie"></i> Farm Fund Growth & Portfolio Breakdown</h3>
+        <h3 class="section-title"><i class="fa-solid fa-chart-pie"></i> Investor Portfolio Valuation & Separate Capital Growth</h3>
         <div class="grid-2">
           <div>
-            <h4 style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px;">Investment Capital Over Time</h4>
+            <h4 style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px;">Investment Tranches Over Time</h4>
             <div class="chart-wrapper">
               <canvas id="investorGrowthChart"></canvas>
             </div>
           </div>
           <div>
-            <h4 style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px;">Overall Fund Allocation</h4>
+            <h4 style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px;">Independent Capital vs Members Pool Allocation</h4>
             <div class="chart-wrapper">
               <canvas id="investorAllocationChart"></canvas>
             </div>
@@ -1006,25 +1044,18 @@
       </div>
 
       <div class="card-box">
-        <h3 class="section-title"><i class="fa-solid fa-history"></i> Investment & Payout Ledger</h3>
+        <h3 class="section-title"><i class="fa-solid fa-history"></i> Investment & Dividend Ledger</h3>
         <div class="table-responsive">
           <table>
             <thead>
               <tr>
                 <th>Date</th>
-                <th>Description / Farm Project</th>
+                <th>Description / Terms</th>
                 <th class="text-right">Amount (₱)</th>
                 <th class="text-center">Status</th>
               </tr>
             </thead>
-            <tbody id="investorLedgerBody">
-              <tr>
-                <td>2026-01-15</td>
-                <td>Initial Farm Expansion Tranche</td>
-                <td class="text-right text-bold">₱100,000.00</td>
-                <td class="text-center text-green">Active / Verified</td>
-              </tr>
-            </tbody>
+            <tbody id="investorLedgerBody"></tbody>
           </table>
         </div>
       </div>
@@ -1085,13 +1116,29 @@
             <label for="memberFee">Fee (%)</label>
             <input type="number" id="memberFee" placeholder="0" min="0" max="100" value="0" step="any">
           </div>
+          <!-- INVESTOR RATE TYPE SELECTOR -->
+          <div class="form-group" id="investorRateTypeGroup" style="display:none;">
+            <label for="investorRateType">Type of Rates</label>
+            <select id="investorRateType">
+              <option value="Fixed rate">Fixed rate</option>
+              <option value="Diminishing rate">Diminishing rate</option>
+              <option value="Compound rates">Compound rates</option>
+            </select>
+          </div>
+          <!-- INVESTOR LOAN TERM (LISTENER ACTIVATED) -->
+          <div class="form-group" id="investorTermGroup" style="display:none;">
+            <label for="investorLoanTerm">Loan/Investment Term Bracket</label>
+            <select id="investorLoanTerm" onchange="updateInvestorRateBasedOnTerm()">
+              <option value="3">3 Months</option>
+              <option value="6">6 Months</option>
+              <option value="12" selected>12 Months</option>
+              <option value="24">24 Months</option>
+            </select>
+          </div>
+          <!-- INVESTOR INTEREST RATE -->
           <div class="form-group" id="investorInterestGroup" style="display:none;">
             <label for="investorInterestRate">Investor Interest Rate (%)</label>
             <input type="number" id="investorInterestRate" placeholder="e.g., 15" min="0" value="15" step="any">
-          </div>
-          <div class="form-group" id="investorTermGroup" style="display:none;">
-            <label for="investorLoanTerm">Loan/Investment Term (Months)</label>
-            <input type="number" id="investorLoanTerm" placeholder="e.g., 12" min="1" value="12" step="any">
           </div>
           <div class="form-group">
             <label for="referrerSelect">Referred By (Level 1 Member)</label>
@@ -1153,7 +1200,7 @@
             <input type="number" id="overallInterest" placeholder="0.00" min="0" step="any" oninput="renderTable()">
           </div>
           <div class="form-group">
-            <label for="customTotalContribution">Total Pool Capital (₱)</label>
+            <label for="customTotalContribution">Total Pool Capital (Members Only - Auto/Custom)</label>
             <input type="number" id="customTotalContribution" placeholder="Auto-calculated" min="0" step="any" oninput="renderTable()">
           </div>
           <div class="form-group">
@@ -1190,7 +1237,7 @@
 
       <!-- DISTRIBUTION SUMMARY -->
       <div class="action-bar">
-        <h2 class="section-title" style="margin: 0;"><i class="fa-solid fa-chart-pie"></i> Distribution Summary (Members Only Profit-Sharing)</h2>
+        <h2 class="section-title" style="margin: 0;"><i class="fa-solid fa-chart-pie"></i> Distribution Summary (Separated Members Pool & Investors)</h2>
         <div style="display: flex; gap: 10px;">
           <button class="btn btn-print" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
         </div>
@@ -1198,8 +1245,12 @@
 
       <div class="dashboard-grid">
         <div class="dash-card">
-          <div class="label">Total Pool Capital</div>
+          <div class="label">Total Members Pool Capital</div>
           <div class="value">₱<span id="totalContributionDisplay">0.00</span></div>
+        </div>
+        <div class="dash-card teal">
+          <div class="label">Total Investor Capital</div>
+          <div class="value">₱<span id="totalInvestorCapitalDisplay">0.00</span></div>
         </div>
         <div class="dash-card green">
           <div class="label">Gross Distributed Yield</div>
@@ -1208,10 +1259,6 @@
         <div class="dash-card red">
           <div class="label">Total Processing Fees</div>
           <div class="value">₱<span id="totalFeesDisplay">0.00</span></div>
-        </div>
-        <div class="dash-card orange">
-          <div class="label">Total Referral Value</div>
-          <div class="value">₱<span id="totalReferralValDisplay">0.00</span></div>
         </div>
         <div class="dash-card purple">
           <div class="label">Net Combined Fund</div>
@@ -1348,7 +1395,7 @@
   const manifestURL = URL.createObjectURL(blobManifest);
   document.getElementById('manifestPlaceholder').setAttribute('href', manifestURL);
 
-  // FIREBASE CONFIGURATION (UPDATED)
+  // FIREBASE CONFIGURATION
   const firebaseConfig = {
     apiKey: "AIzaSyAZ6xLYGtUfXohAeHzTPOnxyoV7fiVgnKQ",
     authDomain: "tif-memberdata.firebaseapp.com",
@@ -1400,24 +1447,70 @@
   let currentAnnouncement = "Welcome to Tyler's Integrated Farm!";
   let currentLoggedInMember = null;
 
-  // --- AUTO-UPDATE POOL CONTRIBUTION & TOTALS ---
+  // --- AUTOMATED RATE & LOAN TERM CALCULATION ENGINE ---
+  function calculateInvestorReturns(capital, rate, termMonths, rateType) {
+    const r = (parseFloat(rate) || 0) / 100;
+    const t = (parseFloat(termMonths) || 12) / 12; // Time in years
+    let returns = 0;
+
+    if (rateType === 'Fixed rate') {
+      // Simple Interest Formula: Principal * Rate * Time
+      returns = capital * r * t;
+    } else if (rateType === 'Diminishing rate') {
+      // Diminishing Balance / Reducing Balance Interest Formula (Average Principal over Term)
+      returns = capital * r * t * 0.5;
+    } else if (rateType === 'Compound rates') {
+      // Compound Interest Formula: Principal * (1 + Rate)^Time - Principal
+      returns = capital * (Math.pow(1 + r, t) - 1);
+    } else {
+      returns = capital * r * t;
+    }
+    return isNaN(returns) ? 0 : returns;
+  }
+
+  // --- AUTO-UPDATE INTEREST RATE BASED ON TERM ---
+  function updateInvestorRateBasedOnTerm() {
+    const termSelect = document.getElementById('investorLoanTerm');
+    const rateInput = document.getElementById('investorInterestRate');
+    if (!termSelect || !rateInput) return;
+
+    const term = parseInt(termSelect.value) || 12;
+    let recommendedRate = 15;
+
+    if (term === 3) recommendedRate = 5;
+    else if (term === 6) recommendedRate = 10;
+    else if (term === 12) recommendedRate = 18;
+    else if (term === 24) recommendedRate = 30;
+    else recommendedRate = term * 1.5;
+
+    rateInput.value = recommendedRate;
+  }
+
+  // --- AUTO-UPDATE MEMBERS POOL CONTRIBUTION & TOTALS (EXCLUDING INVESTORS) ---
   function recalculatePoolAndTotals() {
-    let totalPool = 0;
+    let totalMemberPool = 0;
+    let totalInvestorCapital = 0;
     
-    // Sum up all valid member contributions
     members.forEach(m => {
-      if (!m.role || m.role === 'member') {
-        totalPool += getMemberTotalContribution(m);
+      const totalCap = getMemberTotalContribution(m);
+      if (m.role === 'investor') {
+        totalInvestorCapital += totalCap;
+      } else {
+        totalMemberPool += totalCap;
       }
     });
 
-    // Automatically update custom total contribution field if empty or auto-syncing
     const customContribInput = document.getElementById('customTotalContribution');
     if (customContribInput) {
-      customContribInput.placeholder = totalPool.toFixed(2);
+      customContribInput.placeholder = totalMemberPool.toFixed(2);
     }
 
-    return totalPool;
+    const totalInvDisplay = document.getElementById('totalInvestorCapitalDisplay');
+    if (totalInvDisplay) {
+      totalInvDisplay.innerText = totalInvestorCapital.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    return totalMemberPool;
   }
 
   // --- ADMIN PAYOUT CONFIRMATION WITH AUTO-DEDUCT ---
@@ -1434,18 +1527,15 @@
       confirmButtonText: 'Yes, Mark as Fully Paid & Deduct'
     }).then((result) => {
       if (result.isConfirmed) {
-        // Calculate current total contribution before resetting/deducting
         const totalContrib = getMemberTotalContribution(member);
         
         member.netBalancePayoutRequested = false;
         member.netBalanceFullyPaid = true;
         
-        // Initialize history if missing
         if (!member.history) member.history = [];
         
         const currentDate = new Date().toISOString().split('T')[0];
         
-        // Auto-deduct by pushing a negative balancing entry representing the payout withdrawal
         member.history.push({
           date: currentDate,
           type: 'Full Payout / Net Balance Withdrawal',
@@ -1454,7 +1544,6 @@
 
         saveMembersToLocal();
 
-        // Firebase sync if enabled
         if (firebaseEnabled && db) {
           db.collection('members').doc(memberId).update({
             netBalancePayoutRequested: false,
@@ -1463,7 +1552,6 @@
           }).catch(err => console.warn("Firebase payout sync warning:", err));
         }
 
-        // Re-render tables and dashboards
         renderTable();
         recalculatePoolAndTotals();
 
@@ -1485,12 +1573,16 @@
     const role = document.getElementById('memberRoleSelect').value;
     const interestGroup = document.getElementById('investorInterestGroup');
     const termGroup = document.getElementById('investorTermGroup');
+    const rateTypeGroup = document.getElementById('investorRateTypeGroup');
     if (role === 'investor') {
       interestGroup.style.display = 'block';
       termGroup.style.display = 'block';
+      rateTypeGroup.style.display = 'block';
+      updateInvestorRateBasedOnTerm();
     } else {
       interestGroup.style.display = 'none';
       termGroup.style.display = 'none';
+      rateTypeGroup.style.display = 'none';
     }
   }
 
@@ -1861,7 +1953,6 @@
     if (!currentLoggedInMember) return;
     const member = currentLoggedInMember;
 
-    // 1st Confirmation
     const firstCheck = await Swal.fire({
       title: 'Request Pay Out?',
       text: `Do you want to request a full pay out for your Net Balance?`,
@@ -1873,7 +1964,6 @@
 
     if (!firstCheck.isConfirmed) return;
 
-    // 2nd Confirmation with Password Protection & 2x verification check
     const secondCheck = await Swal.fire({
       title: 'Security & 2nd Confirmation',
       html: `
@@ -1910,7 +2000,11 @@
         }).catch(err => console.warn(err));
       }
 
-      renderMemberDashboard(member);
+      if (member.role === 'investor') {
+        renderInvestorDashboard(member);
+      } else {
+        renderMemberDashboard(member);
+      }
       renderTable();
 
       Swal.fire({
@@ -2372,8 +2466,9 @@ Thank you for investing with Tyler's Integrated Farm!
     const interestRate = investor.interestRate !== undefined ? parseFloat(investor.interestRate) : 15;
     const loanTerm = investor.loanTerm !== undefined ? parseInt(investor.loanTerm) : 12;
     const feePercent = investor.feePercent !== undefined ? parseFloat(investor.feePercent) : 0;
+    const rateType = investor.rateType || 'Fixed rate';
 
-    const returnsEarned = investorTotalCapital * (interestRate / 100);
+    const returnsEarned = calculateInvestorReturns(investorTotalCapital, interestRate, loanTerm, rateType);
     const feeAmount = returnsEarned * (feePercent / 100);
     const netReturns = returnsEarned - feeAmount;
     const totalValuation = investorTotalCapital + netReturns;
@@ -2381,9 +2476,45 @@ Thank you for investing with Tyler's Integrated Farm!
     document.getElementById('investorNameDisplay').innerText = investor.name;
     document.getElementById('invCapital').innerText = investorTotalCapital.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('invReturns').innerText = netReturns.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('invTermDisplay').innerText = `${loanTerm} Mos @ ${interestRate}%`;
+    document.getElementById('invTermDisplay').innerText = `${loanTerm} Mos @ ${interestRate}% (${rateType})`;
     document.getElementById('invFeeDisplay').innerText = feeAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('invValuation').innerText = totalValuation.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    const historyTbody = document.getElementById('investorHistoryTableBody');
+    if (historyTbody) {
+      historyTbody.innerHTML = '';
+      if (investor.history && investor.history.length > 0) {
+        investor.history.forEach(h => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${h.date || 'N/A'}</td>
+            <td>${h.type || 'Investor Capital Tranche'}</td>
+            <td class="text-right ${h.amount < 0 ? 'text-red' : 'text-green'}">₱${Number(h.amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+          `;
+          historyTbody.appendChild(tr);
+        });
+      } else {
+        historyTbody.innerHTML = `<tr><td colspan="3" class="text-center" style="color:var(--text-muted);">No investor contribution records found.</td></tr>`;
+      }
+    }
+
+    const ledgerTbody = document.getElementById('investorLedgerBody');
+    if (ledgerTbody) {
+      ledgerTbody.innerHTML = `
+        <tr>
+          <td>${investor.history && investor.history.length > 0 ? investor.history[0].date : '2026-01-15'}</td>
+          <td>Custom Investor Term Tranche (${loanTerm} Months @ ${interestRate}% Interest - ${rateType})</td>
+          <td class="text-right text-bold">₱${investorTotalCapital.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+          <td class="text-center text-green">Active / Verified</td>
+        </tr>
+        <tr>
+          <td>--</td>
+          <td>Projected Net Dividend Return (${interestRate}% ROI via ${rateType} less ${feePercent}% fee)</td>
+          <td class="text-right text-bold text-green">₱${netReturns.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+          <td class="text-center text-green">Accrued</td>
+        </tr>
+      `;
+    }
 
     const ctxGrowth = document.getElementById('investorGrowthChart');
     if (ctxGrowth) {
@@ -2394,7 +2525,7 @@ Thank you for investing with Tyler's Integrated Farm!
         data: {
           labels: sortedHistory.map(h => h.date),
           datasets: [{
-            label: 'Capital Invested (₱)',
+            label: 'Investor Capital Tranches (₱)',
             data: sortedHistory.map(h => h.amount),
             borderColor: '#0d9488',
             backgroundColor: 'rgba(13, 148, 136, 0.1)',
@@ -2409,13 +2540,22 @@ Thank you for investing with Tyler's Integrated Farm!
     const ctxAlloc = document.getElementById('investorAllocationChart');
     if (ctxAlloc) {
       if (investorAllocationChartInstance) investorAllocationChartInstance.destroy();
+      
+      let totalMembersPoolVal = 0;
+      let totalInvestorsVal = 0;
+      members.forEach(m => {
+        const cap = getMemberTotalContribution(m);
+        if (m.role === 'investor') totalInvestorsVal += cap;
+        else totalMembersPoolVal += cap;
+      });
+
       investorAllocationChartInstance = new Chart(ctxAlloc, {
         type: 'doughnut',
         data: {
-          labels: members.map(m => `${m.name} (${m.role || 'member'})`),
+          labels: ['Members Pool Capital', 'Investors Capital Fund'],
           datasets: [{
-            data: members.map(m => getMemberTotalContribution(m)),
-            backgroundColor: ['#0d9488', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444']
+            data: [totalMembersPoolVal, totalInvestorsVal],
+            backgroundColor: ['#3b82f6', '#0d9488']
           }]
         },
         options: { responsive: true, maintainAspectRatio: false }
@@ -2432,7 +2572,6 @@ Thank you for investing with Tyler's Integrated Farm!
     const totalContrib = getMemberTotalContribution(member);
     document.getElementById('mContribution').innerText = totalContrib.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
-    // Calculations based on pool
     let totalPool = recalculatePoolAndTotals();
 
     const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
@@ -2461,7 +2600,7 @@ Thank you for investing with Tyler's Integrated Farm!
     if (member.cashoutRequested) {
       cashoutContainer.innerHTML = `<span class="badge-pay-note"><i class="fa-solid fa-clock"></i> Cash Out Requested (Pending)</span>`;
     } else {
-      cashoutContainer.innerHTML = `<button class="btn btn-cashout" onclick="requestCashOut('${member.id}')"><i class="fa-solid fa-money-bill-wave"></i> Request Cash Out</button>`;
+      cashoutContainer.innerHTML = `<button class="btn btn-cashout" onclick="requestCashOut('${member.id}')"><i class="fa-solid fa-money-check-dollar"></i> Request Cash Out</button>`;
     }
 
     document.getElementById('mPoolContribution').innerText = totalPool.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -2469,218 +2608,269 @@ Thank you for investing with Tyler's Integrated Farm!
     document.getElementById('mGrossInterest').innerText = grossMemberInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('mReferralRewardDetail').innerText = formatCurrency(refVal);
 
-    const newNetBalance = totalContrib + netMemberInterest + refVal;
-    document.getElementById('mTotalBalance').innerText = newNetBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const totalNetBalance = totalContrib + netMemberInterest + refVal;
+    document.getElementById('mTotalBalance').innerText = totalNetBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
-    // Net balance payout status container
     const netPayoutContainer = document.getElementById('mNetBalancePayoutBtnContainer');
     if (member.netBalanceFullyPaid) {
-      netPayoutContainer.innerHTML = `<span class="badge-fully-paid"><i class="fa-solid fa-circle-check"></i> Net Balance Fully Paid by Admin</span>`;
+      netPayoutContainer.innerHTML = `<span class="badge-fully-paid"><i class="fa-solid fa-circle-check"></i> Fully Paid & Deducted</span>`;
     } else if (member.netBalancePayoutRequested) {
-      netPayoutContainer.innerHTML = `<span class="badge-pay-note"><i class="fa-solid fa-clock"></i> Payout Requested (Waiting for Admin)</span>`;
+      netPayoutContainer.innerHTML = `<span class="badge-pay-note"><i class="fa-solid fa-clock"></i> Pay Out Requested (Pending Approval)</span>`;
     } else {
-      netPayoutContainer.innerHTML = `<button class="btn btn-cashout" onclick="requestNetBalancePayout()"><i class="fa-solid fa-money-bill-transfer"></i> Request Pay Out (Net Balance)</button>`;
+      netPayoutContainer.innerHTML = `<button class="btn btn-gcash" style="background-color: #16a34a;" onclick="requestNetBalancePayout()"><i class="fa-solid fa-money-bill-transfer"></i> REQUEST NET BALANCE PAY OUT</button>`;
     }
 
-    // Render history table
-    const historyBody = document.getElementById('memberHistoryTableBody');
-    historyBody.innerHTML = '';
-    if (member.history && member.history.length > 0) {
-      member.history.forEach(h => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${h.date || 'N/A'}</td>
-          <td>${h.note || h.type || 'Contribution / Top-up'}</td>
-          <td class="text-right text-bold">₱${parseFloat(h.amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-        `;
-        historyBody.appendChild(row);
-      });
-    } else {
-      historyBody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">No contribution history recorded yet.</td></tr>`;
+    renderMemberNetworkTree(member);
+
+    const histTable = document.getElementById('memberHistoryTableBody');
+    if (histTable) {
+      histTable.innerHTML = '';
+      if (member.history && member.history.length > 0) {
+        member.history.forEach(h => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${h.date || 'N/A'}</td>
+            <td>${h.type || 'Contribution / Top-up'}</td>
+            <td class="text-right ${h.amount < 0 ? 'text-red' : 'text-green'}">₱${Number(h.amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+          `;
+          histTable.appendChild(tr);
+        });
+      } else {
+        histTable.innerHTML = `<tr><td colspan="3" class="text-center" style="color:var(--text-muted);">No contribution history found.</td></tr>`;
+      }
     }
 
     renderMemberCharts(member, totalPool, overallInterest);
-    renderNetworkTree(member);
   }
 
-  function renderMemberCharts(member, totalPool, overallInterest) {
-    const timeStats = calculateTimebasedContributions();
-
-    // 1. Summary Chart
-    const ctxSummary = document.getElementById('memberSummaryChart');
-    if (ctxSummary) {
-      if (memberSummaryChartInstance) memberSummaryChartInstance.destroy();
-      memberSummaryChartInstance = new Chart(ctxSummary, {
-        type: 'bar',
-        data: {
-          labels: ['Weekly', 'Monthly', 'Yearly'],
-          datasets: [{
-            label: 'Total Pool Contributions (₱)',
-            data: [timeStats.weekly, timeStats.monthly, timeStats.yearly],
-            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b']
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-    }
-
-    // 2. Personal History Chart
-    const ctxHistory = document.getElementById('memberHistoryChart');
-    if (ctxHistory) {
-      if (memberHistoryChartInstance) memberHistoryChartInstance.destroy();
-      const sortedH = (member.history || []).slice().sort((a,b) => new Date(a.date) - new Date(b.date));
-      memberHistoryChartInstance = new Chart(ctxHistory, {
-        type: 'line',
-        data: {
-          labels: sortedH.map(h => h.date),
-          datasets: [{
-            label: 'Your Contributions Over Time (₱)',
-            data: sortedH.map(h => h.amount),
-            borderColor: '#1e40af',
-            backgroundColor: 'rgba(30, 64, 175, 0.1)',
-            fill: true,
-            tension: 0.3
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-    }
-
-    // 3. Share Chart
-    const ctxShare = document.getElementById('memberShareChart');
-    if (ctxShare) {
-      if (memberShareChartInstance) memberShareChartInstance.destroy();
-      const memberList = members.filter(m => !m.role || m.role === 'member');
-      memberShareChartInstance = new Chart(ctxShare, {
-        type: 'pie',
-        data: {
-          labels: memberList.map(m => m.name),
-          datasets: [{
-            data: memberList.map(m => getMemberTotalContribution(m)),
-            backgroundColor: ['#1e40af', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#0d9488']
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-    }
-  }
-
-  function renderAdminCharts() {
-    const timeStats = calculateTimebasedContributions();
-
-    const ctxSum = document.getElementById('adminSummaryChart');
-    if (ctxSum) {
-      if (adminSummaryChartInstance) adminSummaryChartInstance.destroy();
-      adminSummaryChartInstance = new Chart(ctxSum, {
-        type: 'bar',
-        data: {
-          labels: ['Weekly Total', 'Monthly Total', 'Yearly Total'],
-          datasets: [{
-            label: 'Contributions (₱)',
-            data: [timeStats.weekly, timeStats.monthly, timeStats.yearly],
-            backgroundColor: ['#1e40af', '#0d9488', '#f59e0b']
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-    }
-
-    const ctxMem = document.getElementById('adminMembersChart');
-    if (ctxMem) {
-      if (adminMembersChartInstance) adminMembersChartInstance.destroy();
-      const memberList = members.filter(m => !m.role || m.role === 'member');
-      adminMembersChartInstance = new Chart(ctxMem, {
-        type: 'doughnut',
-        data: {
-          labels: memberList.map(m => m.name),
-          datasets: [{
-            data: memberList.map(m => getMemberTotalContribution(m)),
-            backgroundColor: ['#1e40af', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#0d9488']
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-    }
-  }
-
-  function renderNetworkTree(currentUser) {
+  function renderMemberNetworkTree(member) {
     const container = document.getElementById('networkTreeContainer');
     if (!container) return;
 
-    // Find direct downlines (Level 1)
-    const level1 = members.filter(m => m.referrerId === currentUser.id);
-    // Find indirect downlines (Level 2)
-    const level1Ids = level1.map(m => m.id);
-    const level2 = members.filter(m => level1Ids.includes(m.referrerId));
-    // Find Level 3
-    const level2Ids = level2.map(m => m.id);
-    const level3 = members.filter(m => level2Ids.includes(m.referrerId));
-
+    const directReferrals = members.filter(m => m.referrerId === member.id);
+    
     let html = `
-      <ul class="network-tree-ul">
-        <li class="network-tree-li">
-          <div class="tree-node-card root">
-            <div class="tree-node-avatar"><i class="fa-solid fa-user-tie"></i></div>
-            <div style="font-weight:700; font-size:0.85rem;">${currentUser.name} (You)</div>
-            <div style="font-size:0.75rem; color:#64748b;">₱${getMemberTotalContribution(currentUser).toLocaleString()}</div>
-          </div>
+      <div class="tree-node-card root">
+        <div class="tree-node-avatar"><i class="fa-solid fa-user-shield"></i></div>
+        <div style="font-weight:700; font-size:0.85rem;">${member.name} (You)</div>
+        <div class="small-subtext">Capital: ₱${getMemberTotalContribution(member).toLocaleString()}</div>
+      </div>
     `;
 
-    if (level1.length > 0) {
+    if (directReferrals.length > 0) {
       html += `<ul class="network-tree-ul">`;
-      level1.forEach(l1 => {
-        const l1Sub = members.filter(m => m.referrerId === l1.id);
-        const l1SubIds = l1Sub.map(m => m.id);
-        const l2Sub = members.filter(m => l1SubIds.includes(m.referrerId));
-
+      directReferrals.forEach(l1 => {
+        const l2s = members.filter(m => m.referrerId === l1.id);
         html += `
           <li class="network-tree-li">
             <div class="tree-node-card level-1">
               <div class="tree-node-avatar"><i class="fa-solid fa-user"></i></div>
-              <div style="font-weight:600; font-size:0.82rem;">${l1.name}</div>
-              <div style="font-size:0.72rem; color:#64748b;">Level 1 • ₱${getMemberTotalContribution(l1).toLocaleString()}</div>
+              <div style="font-weight:600; font-size:0.8rem;">${l1.name}</div>
+              <div class="small-subtext">L1 Direct (₱${getMemberTotalContribution(l1).toLocaleString()})</div>
             </div>
         `;
 
-        if (l1Sub.length > 0) {
+        if (l2s.length > 0) {
           html += `<ul class="network-tree-ul">`;
-          l1Sub.forEach(l2 => {
+          l2s.forEach(l2 => {
+            const l3s = members.filter(m => m.referrerId === l2.id);
             html += `
               <li class="network-tree-li">
                 <div class="tree-node-card level-2">
-                  <div class="tree-node-avatar"><i class="fa-solid fa-user-group"></i></div>
+                  <div class="tree-node-avatar"><i class="fa-solid fa-user-tag"></i></div>
                   <div style="font-weight:600; font-size:0.8rem;">${l2.name}</div>
-                  <div style="font-size:0.7rem; color:#64748b;">Level 2 • ₱${getMemberTotalContribution(l2).toLocaleString()}</div>
+                  <div class="small-subtext">L2 Indirect (₱${getMemberTotalContribution(l2).toLocaleString()})</div>
                 </div>
             `;
 
-            const l2SubMembers = members.filter(m => m.referrerId === l2.id);
-            if (l2SubMembers.length > 0) {
+            if (l3s.length > 0) {
               html += `<ul class="network-tree-ul">`;
-              l2SubMembers.forEach(l3 => {
+              l3s.forEach(l3 => {
                 html += `
                   <li class="network-tree-li">
                     <div class="tree-node-card level-3">
-                      <div class="tree-node-avatar"><i class="fa-solid fa-users"></i></div>
-                      <div style="font-weight:600; font-size:0.75rem;">${l3.name}</div>
-                      <div style="font-size:0.65rem; color:#64748b;">Level 3 • ₱${getMemberTotalContribution(l3).toLocaleString()}</div>
+                      <div class="tree-node-avatar"><i class="fa-solid fa-user-check"></i></div>
+                      <div style="font-weight:600; font-size:0.8rem;">${l3.name}</div>
+                      <div class="small-subtext">L3 Indirect (₱${getMemberTotalContribution(l3).toLocaleString()})</div>
                     </div>
                   </li>
                 `;
               });
               html += `</ul>`;
             }
+
             html += `</li>`;
           });
           html += `</ul>`;
         }
+
         html += `</li>`;
       });
       html += `</ul>`;
     }
 
-    html += `</li></ul>`;
     container.innerHTML = html;
+  }
+
+  async function addMember() {
+    const name = document.getElementById('memberName').value.trim();
+    const contrib = parseFloat(document.getElementById('memberContribInput').value) || 0;
+    const role = document.getElementById('memberRoleSelect').value;
+    const feePercent = parseFloat(document.getElementById('memberFee').value) || 0;
+    const referrerId = document.getElementById('referrerSelect').value;
+    const initialPoints = parseFloat(document.getElementById('memberPointsInput').value) || 0;
+    const birthdate = document.getElementById('memberBirthdate').value;
+    const address = document.getElementById('memberAddress').value.trim();
+    const username = document.getElementById('newUsername').value.trim();
+    const password = document.getElementById('newPassword').value.trim() || 'password123';
+
+    let rateType = 'Fixed rate';
+    let loanTerm = 12;
+    let interestRate = 15;
+
+    if (role === 'investor') {
+      rateType = document.getElementById('investorRateType').value;
+      loanTerm = parseInt(document.getElementById('investorLoanTerm').value) || 12;
+      interestRate = parseFloat(document.getElementById('investorInterestRate').value) || 15;
+    }
+
+    if (!name || !username) {
+      Swal.fire('Error', 'Please enter Full Name and Username.', 'error');
+      return;
+    }
+
+    const duplicate = members.find(m => m.username && m.username.toLowerCase() === username.toLowerCase());
+    if (duplicate) {
+      Swal.fire('Error', 'Username already exists! Choose another username.', 'error');
+      return;
+    }
+
+    const currentDate = new Date().toISOString().split('T')[0];
+    const newMemberObj = {
+      name,
+      role,
+      feePercent,
+      referrerId: referrerId || null,
+      referralPoints: initialPoints,
+      birthdate,
+      address,
+      username,
+      password,
+      rateType,
+      loanTerm,
+      interestRate,
+      history: contrib > 0 ? [{ date: currentDate, type: role === 'investor' ? 'Initial Investment Tranche' : 'Initial Capital', amount: contrib }] : []
+    };
+
+    if (referrerId) {
+      const l1 = members.find(m => m.id === referrerId);
+      const l1Pts = parseFloat(document.getElementById('level1Points').value) || 1;
+      const l2Pts = parseFloat(document.getElementById('level2Points').value) || 0.5;
+      const l3Pts = parseFloat(document.getElementById('level3Points').value) || 0.25;
+
+      if (l1) {
+        l1.referralPoints = (parseFloat(l1.referralPoints) || 0) + l1Pts;
+        if (l1.referrerId) {
+          const l2 = members.find(m => m.id === l1.referrerId);
+          if (l2) {
+            l2.referralPoints = (parseFloat(l2.referralPoints) || 0) + l2Pts;
+            if (l2.referrerId) {
+              const l3 = members.find(m => m.id === l2.referrerId);
+              if (l3) {
+                l3.referralPoints = (parseFloat(l3.referralPoints) || 0) + l3Pts;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (firebaseEnabled && db) {
+      try {
+        const docRef = await db.collection('members').add(newMemberObj);
+        newMemberObj.id = docRef.id;
+        members.push(newMemberObj);
+        for (let m of members) {
+          if (m.id) {
+            await db.collection('members').doc(m.id).set(m, { merge: true });
+          }
+        }
+      } catch (err) {
+        console.warn("Firebase add member warning:", err);
+        newMemberObj.id = 'local_' + Date.now();
+        members.push(newMemberObj);
+      }
+    } else {
+      newMemberObj.id = 'local_' + Date.now();
+      members.push(newMemberObj);
+    }
+
+    saveMembersToLocal();
+    populateTopupMemberDropdown();
+    renderTable();
+    renderCredentialsTable();
+
+    document.getElementById('memberName').value = '';
+    document.getElementById('memberContribInput').value = '';
+    document.getElementById('memberFee').value = '0';
+    document.getElementById('memberPointsInput').value = '0';
+    document.getElementById('memberBirthdate').value = '';
+    document.getElementById('memberAddress').value = '';
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newPassword').value = '';
+
+    Swal.fire({
+      icon: 'success',
+      title: 'User Added Successfully!',
+      text: `${name} has been added as ${role}.`,
+      confirmButtonColor: '#1e40af'
+    });
+  }
+
+  async function addContributionTopUp() {
+    const memberId = document.getElementById('topupMemberSelect').value;
+    const amount = parseFloat(document.getElementById('topupAmount').value) || 0;
+    const date = document.getElementById('topupDate').value || new Date().toISOString().split('T')[0];
+
+    if (!memberId || amount <= 0) {
+      Swal.fire('Warning', 'Please select a member and enter a valid contribution amount greater than 0.', 'warning');
+      return;
+    }
+
+    const member = members.find(m => m.id === memberId);
+    if (!member) return;
+
+    if (!member.history) member.history = [];
+    member.history.push({
+      date: date,
+      type: member.role === 'investor' ? 'Additional Investment Tranche' : 'Top-up Contribution',
+      amount: amount
+    });
+
+    saveMembersToLocal();
+
+    if (firebaseEnabled && db) {
+      try {
+        await db.collection('members').doc(memberId).update({
+          history: member.history
+        });
+      } catch (err) {
+        console.warn("Firebase topup warning:", err);
+      }
+    }
+
+    document.getElementById('topupAmount').value = '';
+    document.getElementById('topupDate').valueAsDate = new Date();
+
+    renderTable();
+    recalculatePoolAndTotals();
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Contribution Saved!',
+      text: `Successfully added ₱${amount.toLocaleString()} to ${member.name}.`,
+      confirmButtonColor: '#1e40af'
+    });
   }
 
   function renderTable() {
@@ -2688,94 +2878,103 @@ Thank you for investing with Tyler's Integrated Farm!
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    let totalPool = recalculatePoolAndTotals();
-    const customContribVal = document.getElementById('customTotalContribution').value;
-    if (customContribVal !== '' && !isNaN(parseFloat(customContribVal))) {
-      totalPool = parseFloat(customContribVal);
-    }
+    let totalMemContrib = 0;
+    let totalInvCap = 0;
+    let totalGrossInt = parseFloat(document.getElementById('overallInterest').value) || 0;
+    let totalFees = 0;
+    let totalFund = 0;
 
-    const overallInterest = parseFloat(document.getElementById('overallInterest').value) || 0;
+    let computedPool = 0;
+    members.forEach(m => {
+      const cap = getMemberTotalContribution(m);
+      if (m.role === 'investor') {
+        totalInvCap += cap;
+      } else {
+        computedPool += cap;
+      }
+    });
+
+    const customContribVal = document.getElementById('customTotalContribution').value;
+    const effectivePool = (customContribVal !== "" && !isNaN(parseFloat(customContribVal))) ? parseFloat(customContribVal) : computedPool;
+
+    totalMemContrib = computedPool;
+
     const pointVal = parseFloat(document.getElementById('pointValueInput').value) || 100;
 
-    let aggregateContrib = 0;
-    let aggregateInterest = 0;
-    let aggregateFees = 0;
-    let aggregateRefVal = 0;
-    let aggregateFund = 0;
-
     members.forEach(m => {
-      const isInvestor = m.role === 'investor';
-      const mContrib = getMemberTotalContribution(m);
-      if (!isInvestor) aggregateContrib += mContrib;
+      const cap = getMemberTotalContribution(m);
+      const feeP = m.feePercent !== undefined ? parseFloat(m.feePercent) : 0;
+      const refPts = parseFloat(m.referralPoints) || 0;
+      const refBonus = refPts * pointVal;
 
-      let netMemberInterest = 0;
-      let feeAmount = 0;
-      let sharePercent = 0;
+      let netReturn = 0;
+      let shareP = 0;
+      let termStr = '-';
 
-      if (!isInvestor) {
-        sharePercent = totalPool > 0 ? (mContrib / totalPool) * 100 : 0;
-        const grossMemberInterest = overallInterest * (sharePercent / 100);
-        const feePercent = m.feePercent !== undefined ? parseFloat(m.feePercent) : 0;
-        feeAmount = grossMemberInterest * (feePercent / 100);
-        netMemberInterest = grossMemberInterest - feeAmount;
-
-        aggregateInterest += netMemberInterest;
-        aggregateFees += feeAmount;
+      if (m.role === 'investor') {
+        const rate = m.interestRate !== undefined ? parseFloat(m.interestRate) : 15;
+        const term = m.loanTerm !== undefined ? parseInt(m.loanTerm) : 12;
+        const rType = m.rateType || 'Fixed rate';
+        termStr = `${term} Mos @ ${rate}%<br><span class="small-subtext">${rType}</span>`;
+        
+        const returnsEarned = calculateInvestorReturns(cap, rate, term, rType);
+        const feeAmt = returnsEarned * (feeP / 100);
+        netReturn = returnsEarned - feeAmt;
+        totalFees += feeAmt;
       } else {
-        const interestRate = m.interestRate !== undefined ? parseFloat(m.interestRate) : 15;
-        const returnsEarned = mContrib * (interestRate / 100);
-        const feePercent = m.feePercent !== undefined ? parseFloat(m.feePercent) : 0;
-        feeAmount = returnsEarned * (feePercent / 100);
-        netMemberInterest = returnsEarned - feeAmount;
+        shareP = effectivePool > 0 ? (cap / effectivePool) * 100 : 0;
+        const grossInt = totalGrossInt * (shareP / 100);
+        const feeAmt = grossInt * (feeP / 100);
+        netReturn = grossInt - feeAmt;
+        totalFees += feeAmt;
+        termStr = `${shareP.toFixed(2)}% Share`;
       }
 
-      const refPoints = parseFloat(m.referralPoints) || 0;
-      const refVal = refPoints * pointVal;
-      if (!isInvestor) aggregateRefVal += refVal;
+      const newNetBal = cap + netReturn + refBonus;
+      totalFund += newNetBal;
 
-      const newNetBalance = mContrib + netMemberInterest + refVal;
-      if (!isInvestor) aggregateFund += newNetBalance;
+      const tr = document.createElement('tr');
+      
+      let actionBtns = `
+        <button class="btn btn-edit" onclick="editMemberDetails('${m.id}')" title="Edit Profile"><i class="fa-solid fa-pen-to-square"></i></button>
+        <button class="btn btn-outline-danger" onclick="deleteMember('${m.id}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
+      `;
 
-      const row = document.createElement('tr');
-      row.innerHTML = `
+      if (m.cashoutRequested) {
+        actionBtns += `<br><button class="btn btn-admin-pay" onclick="adminPayBonus('${m.id}')">PAY BONUS</button>`;
+      }
+      if (m.netBalancePayoutRequested && !m.netBalanceFullyPaid) {
+        actionBtns += `<br><button class="btn btn-admin-pay" style="background:#16a34a;" onclick="adminConfirmNetBalancePayment('${m.id}')">PAY NET BAL</button>`;
+      }
+
+      tr.innerHTML = `
         <td>
           <strong>${m.name}</strong>
-          <span class="small-subtext">@${m.username || 'n/a'} • <span style="text-transform: uppercase; color: ${isInvestor ? '#0d9488' : '#1e40af'}; font-weight:700;">${m.role || 'member'}</span></span>
+          <span class="small-subtext">User: ${m.username || 'N/A'}</span>
+          ${m.role === 'investor' ? '<span class="badge-role-investor">Investor</span>' : '<span class="badge-role-member">Member</span>'}
         </td>
         <td>
           ${m.address || 'N/A'}
-          <span class="small-subtext">Age: ${calculateAge(m.birthdate)}</span>
+          <span class="small-subtext">Age: ${calculateAge(m.birthdate)} (${m.birthdate || 'N/A'})</span>
         </td>
-        <td class="text-right text-bold">₱${mContrib.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td class="text-right">₱${cap.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td class="text-center">${refPts} pts<span class="small-subtext">(₱${refBonus.toLocaleString()})</span></td>
+        <td class="text-center">${termStr}</td>
         <td class="text-center">
-          ${refPoints} pts
-          <span class="small-subtext">${formatCurrency(refVal)}</span>
+          <input type="number" class="inline-fee-input" value="${feeP}" min="0" max="100" step="any" onchange="updateMemberFee('${m.id}', this.value)">%
         </td>
-        <td class="text-center">
-          ${isInvestor ? `${m.loanTerm || 12} Mos @ ${m.interestRate || 15}%` : `${sharePercent.toFixed(2)}%`}
-        </td>
-        <td class="text-center">
-          <input type="number" class="inline-fee-input" value="${m.feePercent !== undefined ? m.feePercent : 0}" min="0" max="100" step="any" onchange="updateMemberFee('${m.id}', this.value)">%
-        </td>
-        <td class="text-right text-green">₱${netMemberInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-        <td class="text-right text-bold" style="color: #1e40af;">₱${newNetBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-        <td class="text-center">
-          <div style="display: flex; gap: 4px; justify-content: center; flex-wrap: wrap;">
-            ${m.netBalancePayoutRequested && !m.netBalanceFullyPaid ? `<button class="btn btn-admin-pay" onclick="adminConfirmNetBalancePayment('${m.id}')"><i class="fa-solid fa-money-bill-transfer"></i> PAY NET</button>` : ''}
-            ${m.cashoutRequested ? `<button class="btn btn-admin-pay" onclick="adminPayBonus('${m.id}')"><i class="fa-solid fa-check"></i> PAY BONUS</button>` : ''}
-            <button class="btn btn-edit" onclick="editMemberDetails('${m.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
-            <button class="btn btn-outline-danger" onclick="deleteMember('${m.id}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
-          </div>
-        </td>
+        <td class="text-right text-green">₱${netReturn.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td class="text-right text-bold">₱${newNetBal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td class="text-center">${actionBtns}</td>
       `;
-      tbody.appendChild(row);
+      tbody.appendChild(tr);
     });
 
-    document.getElementById('totalContributionDisplay').innerText = aggregateContrib.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('totalInterestDisplay').innerText = aggregateInterest.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('totalFeesDisplay').innerText = aggregateFees.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('totalReferralValDisplay').innerText = formatCurrency(aggregateRefVal);
-    document.getElementById('totalFundDisplay').innerText = aggregateFund.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalContributionDisplay').innerText = totalMemContrib.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalInvestorCapitalDisplay').innerText = totalInvCap.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalInterestDisplay').innerText = totalGrossInt.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalFeesDisplay').innerText = totalFees.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    document.getElementById('totalFundDisplay').innerText = totalFund.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
     renderAdminCharts();
   }
@@ -2786,187 +2985,41 @@ Thank you for investing with Tyler's Integrated Farm!
     tbody.innerHTML = '';
 
     members.forEach(m => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
         <td><strong>${m.name}</strong></td>
-        <td><span style="text-transform: uppercase; font-weight:700; color:${m.role === 'investor' ? '#0d9488' : '#1e40af'};">${m.role || 'member'}</span></td>
-        <td>${m.birthdate || 'N/A'} (${calculateAge(m.birthdate)} yrs)</td>
+        <td>${m.role === 'investor' ? '<span class="badge-role-investor">Investor</span>' : '<span class="badge-role-member">Member</span>'}</td>
+        <td>${m.birthdate || 'N/A'} (Age: ${calculateAge(m.birthdate)})</td>
         <td>${m.address || 'N/A'}</td>
-        <td><code>${m.username || ''}</code></td>
-        <td><code>${m.password || ''}</code></td>
+        <td><code>${m.username || 'N/A'}</code></td>
+        <td><code>${m.password || 'N/A'}</code></td>
         <td class="text-center">
-          <button class="btn btn-edit" onclick="editMemberDetails('${m.id}')"><i class="fa-solid fa-pen"></i> Edit</button>
+          <button class="btn btn-edit" onclick="editMemberDetails('${m.id}')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
           <button class="btn btn-outline-danger" onclick="deleteMember('${m.id}')"><i class="fa-solid fa-trash"></i></button>
         </td>
       `;
-      tbody.appendChild(row);
+      tbody.appendChild(tr);
     });
   }
 
   async function updateMemberFee(memberId, newFee) {
     const member = members.find(m => m.id === memberId);
     if (!member) return;
+
     member.feePercent = parseFloat(newFee) || 0;
     saveMembersToLocal();
 
     if (firebaseEnabled && db) {
       db.collection('members').doc(memberId).update({ feePercent: member.feePercent }).catch(err => console.warn(err));
     }
+
     renderTable();
-  }
-
-  async function addMember() {
-    const name = document.getElementById('memberName').value.trim();
-    const contrib = parseFloat(document.getElementById('memberContribInput').value) || 0;
-    const role = document.getElementById('memberRoleSelect').value;
-    const feePercent = parseFloat(document.getElementById('memberFee').value) || 0;
-    const interestRate = parseFloat(document.getElementById('investorInterestRate').value) || 15;
-    const loanTerm = parseInt(document.getElementById('investorLoanTerm').value) || 12;
-    const referrerId = document.getElementById('referrerSelect').value;
-    const initialPoints = parseFloat(document.getElementById('memberPointsInput').value) || 0;
-    const birthdate = document.getElementById('memberBirthdate').value;
-    const address = document.getElementById('memberAddress').value.trim();
-    const username = document.getElementById('newUsername').value.trim();
-    const password = document.getElementById('newPassword').value.trim() || 'password123';
-
-    if (!name || !username) {
-      Swal.fire('Warning', 'Please fill in Member Name and Username.', 'warning');
-      return;
-    }
-
-    const duplicate = members.find(m => m.username && m.username.toLowerCase() === username.toLowerCase());
-    if (duplicate) {
-      Swal.fire('Error', 'Username already exists. Choose a unique username.', 'error');
-      return;
-    }
-
-    const currentDate = new Date().toISOString().split('T')[0];
-    const newMemberId = 'm_' + Date.now();
-
-    const newMemberObj = {
-      id: newMemberId,
-      name,
-      role,
-      feePercent,
-      interestRate,
-      loanTerm,
-      referrerId,
-      referralPoints: initialPoints,
-      birthdate,
-      address,
-      username,
-      password,
-      cashoutRequested: false,
-      netBalancePayoutRequested: false,
-      netBalanceFullyPaid: false,
-      history: contrib > 0 ? [{ date: currentDate, type: 'Initial Capital', amount: contrib }] : []
-    };
-
-    // Distribute 3-level referral points if referrer exists
-    if (referrerId) {
-      const l1 = members.find(m => m.id === referrerId);
-      if (l1) {
-        const l1Pts = parseFloat(document.getElementById('level1Points').value) || 1;
-        l1.referralPoints = (parseFloat(l1.referralPoints) || 0) + l1Pts;
-
-        if (firebaseEnabled && db) {
-          db.collection('members').doc(l1.id).update({ referralPoints: l1.referralPoints }).catch(err => console.warn(err));
-        }
-
-        // Level 2
-        if (l1.referrerId) {
-          const l2 = members.find(m => m.id === l1.referrerId);
-          if (l2) {
-            const l2Pts = parseFloat(document.getElementById('level2Points').value) || 0.5;
-            l2.referralPoints = (parseFloat(l2.referralPoints) || 0) + l2Pts;
-            if (firebaseEnabled && db) {
-              db.collection('members').doc(l2.id).update({ referralPoints: l2.referralPoints }).catch(err => console.warn(err));
-            }
-
-            // Level 3
-            if (l2.referrerId) {
-              const l3 = members.find(m => m.id === l2.referrerId);
-              if (l3) {
-                const l3Pts = parseFloat(document.getElementById('level3Points').value) || 0.25;
-                l3.referralPoints = (parseFloat(l3.referralPoints) || 0) + l3Pts;
-                if (firebaseEnabled && db) {
-                  db.collection('members').doc(l3.id).update({ referralPoints: l3.referralPoints }).catch(err => console.warn(err));
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    members.push(newMemberObj);
-    saveMembersToLocal();
-
-    if (firebaseEnabled && db) {
-      db.collection('members').doc(newMemberId).set(newMemberObj).catch(err => console.warn(err));
-    }
-
-    // Reset inputs
-    document.getElementById('memberName').value = '';
-    document.getElementById('memberContribInput').value = '';
-    document.getElementById('memberFee').value = '0';
-    document.getElementById('investorInterestRate').value = '15';
-    document.getElementById('investorLoanTerm').value = '12';
-    document.getElementById('memberPointsInput').value = '0';
-    document.getElementById('memberBirthdate').value = '';
-    document.getElementById('memberAddress').value = '';
-    document.getElementById('newUsername').value = '';
-    document.getElementById('newPassword').value = '';
-
-    populateTopupMemberDropdown();
-    renderTable();
-    renderCredentialsTable();
-
-    Swal.fire({
-      icon: 'success',
-      title: 'User Added Successfully!',
-      text: `${name} has been added as a ${role}.`,
-      confirmButtonColor: '#16a34a'
-    });
-  }
-
-  async function addContributionTopUp() {
-    const memberId = document.getElementById('topupMemberSelect').value;
-    const amount = parseFloat(document.getElementById('topupAmount').value) || 0;
-    const date = document.getElementById('topupDate').value || new Date().toISOString().split('T')[0];
-
-    if (!memberId || amount <= 0) {
-      Swal.fire('Warning', 'Please select a member and enter a valid contribution amount.', 'warning');
-      return;
-    }
-
-    const member = members.find(m => m.id === memberId);
-    if (!member) return;
-
-    if (!member.history) member.history = [];
-    member.history.push({ date, type: 'Top-up Contribution', amount });
-
-    saveMembersToLocal();
-
-    if (firebaseEnabled && db) {
-      db.collection('members').doc(memberId).update({ history: member.history }).catch(err => console.warn(err));
-    }
-
-    document.getElementById('topupAmount').value = '';
-    renderTable();
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Top-up Recorded!',
-      text: `₱${amount.toLocaleString()} added to ${member.name}'s account.`,
-      confirmButtonColor: '#16a34a'
-    });
   }
 
   async function deleteMember(memberId) {
     const confirm = await Swal.fire({
-      title: 'Delete User Profile?',
-      text: 'Are you sure you want to delete this user? This action cannot be undone.',
+      title: 'Delete User?',
+      text: 'Are you sure you want to delete this member or investor? This action cannot be undone.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc2626',
@@ -2985,57 +3038,120 @@ Thank you for investing with Tyler's Integrated Farm!
       renderTable();
       renderCredentialsTable();
 
-      Swal.fire('Deleted!', 'User profile has been removed.', 'success');
+      Swal.fire('Deleted!', 'User has been deleted successfully.', 'success');
     }
   }
 
-  async function saveAnnouncement() {
-    const text = document.getElementById('announcementText').value.trim();
-    currentAnnouncement = text;
-    await saveFundSettings();
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Announcement Saved!',
-      text: 'Popup announcement has been updated for all users.',
-      confirmButtonColor: '#16a34a'
-    });
-  }
-
   function filterTables() {
-    const query = document.getElementById('tableSearchInput').value.toLowerCase();
+    const q = document.getElementById('tableSearchInput').value.toLowerCase();
     const rows = document.querySelectorAll('#reportTable tbody tr');
-
-    rows.forEach(row => {
-      const text = row.innerText.toLowerCase();
-      row.style.display = text.includes(query) ? '' : 'none';
+    rows.forEach(r => {
+      const text = r.innerText.toLowerCase();
+      r.style.display = text.includes(q) ? '' : 'none';
     });
   }
 
-  function logout() {
-    localStorage.removeItem('tif_active_session');
-    currentLoggedInMember = null;
+  function renderAdminCharts() {
+    const ctxSum = document.getElementById('adminSummaryChart');
+    if (ctxSum) {
+      if (adminSummaryChartInstance) adminSummaryChartInstance.destroy();
+      const timeData = calculateTimebasedContributions();
+      adminSummaryChartInstance = new Chart(ctxSum, {
+        type: 'bar',
+        data: {
+          labels: ['Weekly Total', 'Monthly Total', 'Yearly Total'],
+          datasets: [{
+            label: 'Contributions (₱)',
+            data: [timeData.weekly, timeData.monthly, timeData.yearly],
+            backgroundColor: ['#3b82f6', '#10b981', '#8b5cf6']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
 
-    document.getElementById('loginSection').classList.remove('hidden');
-    document.getElementById('memberDashboard').classList.add('hidden');
-    document.getElementById('investorDashboard').classList.add('hidden');
-    document.getElementById('adminDashboard').classList.add('hidden');
-    document.getElementById('userInfoHeader').classList.add('hidden');
-
-    document.getElementById('adminPass').value = '';
-    document.getElementById('memberUsername').value = '';
-    document.getElementById('memberPassword').value = '';
-    document.getElementById('investorUsername').value = '';
-    document.getElementById('investorPassword').value = '';
+    const ctxMem = document.getElementById('adminMembersChart');
+    if (ctxMem) {
+      if (adminMembersChartInstance) adminMembersChartInstance.destroy();
+      const sorted = members.slice().sort((a,b) => getMemberTotalContribution(b) - getMemberTotalContribution(a)).slice(0, 5);
+      adminMembersChartInstance = new Chart(ctxMem, {
+        type: 'doughnut',
+        data: {
+          labels: sorted.map(m => m.name),
+          datasets: [{
+            data: sorted.map(m => getMemberTotalContribution(m)),
+            backgroundColor: ['#1e40af', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
   }
 
-  // CALCULATOR LOGIC
+  function renderMemberCharts(member, totalPool, overallInterest) {
+    const ctxSum = document.getElementById('memberSummaryChart');
+    if (ctxSum) {
+      if (memberSummaryChartInstance) memberSummaryChartInstance.destroy();
+      const timeData = calculateTimebasedContributions();
+      memberSummaryChartInstance = new Chart(ctxSum, {
+        type: 'bar',
+        data: {
+          labels: ['Weekly Pool', 'Monthly Pool', 'Yearly Pool'],
+          datasets: [{
+            label: 'Farm Pool (₱)',
+            data: [timeData.weekly, timeData.monthly, timeData.yearly],
+            backgroundColor: ['#1e40af', '#10b981', '#3b82f6']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    const ctxHist = document.getElementById('memberHistoryChart');
+    if (ctxHist) {
+      if (memberHistoryChartInstance) memberHistoryChartInstance.destroy();
+      const hist = member.history || [];
+      memberHistoryChartInstance = new Chart(ctxHist, {
+        type: 'line',
+        data: {
+          labels: hist.map(h => h.date),
+          datasets: [{
+            label: 'Your Contributions (₱)',
+            data: hist.map(h => h.amount),
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    const ctxShare = document.getElementById('memberShareChart');
+    if (ctxShare) {
+      if (memberShareChartInstance) memberShareChartInstance.destroy();
+      const topMembers = members.slice().sort((a,b) => getMemberTotalContribution(b) - getMemberTotalContribution(a)).slice(0, 5);
+      memberShareChartInstance = new Chart(ctxShare, {
+        type: 'pie',
+        data: {
+          labels: topMembers.map(m => m.name),
+          datasets: [{
+            data: topMembers.map(m => getMemberTotalContribution(m)),
+            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899']
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+  }
+
+  // FLOATING CALCULATOR LOGIC
   let calcDisplayValue = "0";
   let calcHistoryValue = "";
 
   function toggleCalculator() {
-    const calc = document.getElementById('floatingCalc');
-    calc.classList.toggle('active');
+    document.getElementById('floatingCalc').classList.toggle('active');
   }
 
   function appendCalc(val) {
@@ -3044,16 +3160,16 @@ Thank you for investing with Tyler's Integrated Farm!
     } else {
       calcDisplayValue += val;
     }
-    updateCalcScreen();
+    updateCalcDisplay();
   }
 
   function clearCalc() {
     calcDisplayValue = "0";
     calcHistoryValue = "";
-    updateCalcScreen();
+    updateCalcDisplay();
   }
 
-  function updateCalcScreen() {
+  function updateCalcDisplay() {
     document.getElementById('calcDisplay').value = calcDisplayValue;
     document.getElementById('calcHistory').innerText = calcHistoryValue;
   }
@@ -3061,37 +3177,56 @@ Thank you for investing with Tyler's Integrated Farm!
   function calculateCalc() {
     try {
       calcHistoryValue = calcDisplayValue + " =";
-      let sanitized = calcDisplayValue.replace(/%/g, '/100');
+      let sanitized = calcDisplayValue.replace(/×/g, '*').replace(/÷/g, '/');
       let result = eval(sanitized);
       calcDisplayValue = String(result);
-      updateCalcScreen();
+      updateCalcDisplay();
     } catch (e) {
       calcDisplayValue = "Error";
-      updateCalcScreen();
-      calcDisplayValue = "0";
+      updateCalcDisplay();
+      setTimeout(clearCalc, 1500);
     }
   }
 
   function calcFunc(type) {
     try {
-      let val = eval(calcDisplayValue);
+      let val = parseFloat(calcDisplayValue);
       if (type === 'sqrt') {
-        calcHistoryValue = `&radic;(${val}) =`;
+        calcHistoryValue = `&radic;(${calcDisplayValue}) =`;
         calcDisplayValue = String(Math.sqrt(val));
       } else if (type === 'sqr') {
-        calcHistoryValue = `(${val})&sup2; =`;
+        calcHistoryValue = `(${calcDisplayValue})&sup2; =`;
         calcDisplayValue = String(Math.pow(val, 2));
       } else if (type === 'pm') {
         calcDisplayValue = String(val * -1);
       }
-      updateCalcScreen();
+      updateCalcDisplay();
     } catch (e) {
       calcDisplayValue = "Error";
-      updateCalcScreen();
-      calcDisplayValue = "0";
+      updateCalcDisplay();
+      setTimeout(clearCalc, 1500);
     }
   }
-</script>
 
+  async function saveAnnouncement() {
+    const text = document.getElementById('announcementText').value.trim();
+    currentAnnouncement = text;
+    await saveFundSettings();
+    Swal.fire('Saved!', 'Announcement updated successfully.', 'success');
+  }
+
+  function logout() {
+    localStorage.removeItem('tif_active_session');
+    currentLoggedInMember = null;
+    document.getElementById('userInfoHeader').classList.add('hidden');
+    document.getElementById('loginSection').classList.remove('hidden');
+    document.getElementById('memberDashboard').classList.add('hidden');
+    document.getElementById('investorDashboard').classList.add('hidden');
+    document.getElementById('adminDashboard').classList.add('hidden');
+    document.getElementById('memberPassword').value = '';
+    document.getElementById('investorPassword').value = '';
+    document.getElementById('adminPass').value = '';
+  }
+</script>
 </body>
 </html>
